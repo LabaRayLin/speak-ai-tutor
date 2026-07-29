@@ -73,6 +73,7 @@ const testApiResult = document.getElementById('testApiResult');
 
 // State Variables
 let isConnected = false;
+let isSetupComplete = false;
 let ws = null;
 let inputAudioContext = null;
 let outputAudioContext = null;
@@ -520,6 +521,9 @@ async function startAudioCapture() {
         scriptProcessor.onaudioprocess = (event) => {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
+            const isDirectGemini = ws.url.includes('generativelanguage.googleapis.com');
+            if (isDirectGemini && !isSetupComplete) return;
+
             const inputData = event.inputBuffer.getChannelData(0);
 
             let sumSquares = 0;
@@ -611,14 +615,20 @@ function connectWebSocket() {
 
     const isDirectGemini = wsUrl.includes('generativelanguage.googleapis.com');
     const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash-exp';
-    const formattedModel = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
+    let formattedModel = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
 
-    addLog(isDirectGemini ? `連線中：直連 Google Gemini Live API (${selectedModel})` : `連線至後端 WebSocket: ${wsUrl}`, 'info');
+    if (isDirectGemini && !formattedModel.includes('gemini-2.0-flash')) {
+        addLog(`⚠️ Live API 僅支援 Gemini 2.0 Flash，已強制使用 models/gemini-2.0-flash-exp`, 'error');
+        formattedModel = 'models/gemini-2.0-flash-exp';
+    }
+
+    addLog(isDirectGemini ? `連線中：直連 Google Gemini Live API (${formattedModel})` : `連線至後端 WebSocket: ${wsUrl}`, 'info');
 
     ws = new WebSocket(wsUrl);
 
     ws.onopen = async () => {
         isConnected = true;
+        isSetupComplete = false;
         addLog(`連線成功 (情境: ${currentScenario}, 模型: ${selectedModel}, 聲線: ${selectedVoice})`, 'success');
         updateUIState('connected');
 
@@ -655,6 +665,12 @@ function connectWebSocket() {
     ws.onmessage = (event) => {
         try {
             const response = JSON.parse(event.data);
+
+            if (response.setupComplete) {
+                isSetupComplete = true;
+                addLog('✅ 收到伺服器 SetupComplete 確認！現在開始傳輸語音...', 'success');
+                return;
+            }
 
             if (response.error) {
                 addLog(`錯誤: ${JSON.stringify(response.error)}`, 'error');
@@ -706,6 +722,7 @@ function connectWebSocket() {
 
     ws.onclose = (event) => {
         isConnected = false;
+        isSetupComplete = false;
         addLog(`WebSocket 已斷開 (關閉代碼: ${event.code}${event.reason ? ', 原因: ' + event.reason : ''})`, event.code === 1000 ? 'info' : 'error');
         stopAudioCapture();
         stopAndClearAudioQueue();
