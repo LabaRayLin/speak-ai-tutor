@@ -42,8 +42,8 @@
             </div>
             
             <div class="header-right">
-                <!-- Settings Button (API Key & Backend WS) -->
-                <button id="openBackendSettingsBtn" class="icon-btn" title="API Key 與連線設定">
+                <!-- Settings Button (API Key & Model & Backend WS) -->
+                <button id="openBackendSettingsBtn" class="icon-btn" title="API Key 與模型設定">
                     ⚙️
                 </button>
 
@@ -206,21 +206,34 @@
         </div>
     </div>
 
-    <!-- Modal 3: Settings Modal (Gemini API Key & Custom Backend WS & API Test) -->
+    <!-- Modal 3: Settings Modal (Gemini API Key, Model Selection & Custom Backend WS & API Test) -->
     <div class="modal-overlay hidden" id="backendSettingsModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>⚙️ Gemini API Key 與連線設定</h3>
+                <h3>⚙️ Gemini API Key 與模型設定</h3>
                 <button class="close-btn" id="closeBackendSettingsModalBtn">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <!-- Option 1: Direct Gemini API Key with Test Button -->
+                    <!-- Option 1: Direct Gemini API Key with Test Button & Model Selector -->
                     <div style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:12px;">
                         <h4 style="font-size:0.9rem; color:#e0e7ff; margin-bottom:6px;">🔑 方案一：直連 Gemini API Key (推薦 GitHub Pages)</h4>
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
                             填入您的 Gemini API Key 後，網頁即可直接與 Google Gemini Live API 進行無伺服器 WebSocket 雙向語音對話！
                         </p>
+                        
+                        <!-- Model Selector -->
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:4px;">🤖 選擇 Gemini API 模型：</label>
+                            <select id="geminiModelSelect" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(22,28,45,0.9); color:#fff; font-family:inherit; font-size:0.85rem; outline:none; cursor:pointer;">
+                                <option value="gemini-2.0-flash-exp">✨ gemini-2.0-flash-exp (推薦：Gemini Live API 雙向即時語音專用)</option>
+                                <option value="gemini-2.5-flash">⚡ gemini-2.5-flash</option>
+                                <option value="gemini-2-flash">⚡ gemini-2-flash</option>
+                                <option value="gemini-3.5-flash">🚀 gemini-3.5-flash</option>
+                                <option value="gemini-3.1-pro">🧠 gemini-3.1-pro</option>
+                            </select>
+                        </div>
+
                         <div style="display:flex; gap:8px;">
                             <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
                             <button id="testApiKeyBtn" class="icon-btn" style="white-space:nowrap; background:rgba(99,102,241,0.3); border-color:var(--primary); color:#fff; font-weight:600;">

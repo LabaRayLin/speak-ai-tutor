@@ -2,16 +2,15 @@
  * Speak AI Tutor - Full Feature Speak App Replica Logic
  * 
  * 功能包含：
- * 1. 【直連 Gemini API Key】支援在網頁設定中輸入 Gemini API Key，在 GitHub Pages / 無伺服器環境下直接與 Google Gemini Live API 進行 WebSocket 雙向對話。
- * 2. 【🧪 一鍵測試 API Key 連線】新增「🧪 測試 Key」按鈕，發送實時 Request 驗證金鑰有效性並給予回饋。
- * 3. 【防範未設定 Key 斷線】點擊開始對話時若未設定 API Key，自動開啟 ⚙️ 設定視窗並聚焦 API Key 輸入框，避免 Mixed Content 斷線。
- * 4. 【跨平台 Emoji 相容修復】採用全平台字型無障礙相容圖示。
- * 5. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
- * 6. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
- * 7. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
- * 8. 【單字片語收藏庫】LocalStorage 持久化與管理。
- * 9. 【學習成績單】顯示說話時長、對話輪次與修正數。
- * 10.【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
+ * 1. 【直連 Gemini API Key 與模型選擇】支援選擇帳號可用模型（如 gemini-2.0-flash-exp、gemini-2.5-flash、gemini-3.1-pro），直接與 Google Gemini Live API 進行 WebSocket 雙向語音對話。
+ * 2. 【🧪 一鍵測試 API Key 連線】發送實時 Request 驗證金鑰有效性並給予回饋。
+ * 3. 【防範未設定 Key 斷線】點擊開始對話時若未設定 API Key，自動開啟 ⚙️ 設定視窗並聚焦 API Key 輸入框。
+ * 4. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
+ * 5. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
+ * 6. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
+ * 7. 【單字片語收藏庫】LocalStorage 持久化與管理。
+ * 8. 【學習成績單】顯示說話時長、對話輪次與修正數。
+ * 9. 【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
  */
 
 // Register PWA Service Worker
@@ -64,6 +63,7 @@ const backendSettingsModal = document.getElementById('backendSettingsModal');
 const openBackendSettingsBtn = document.getElementById('openBackendSettingsBtn');
 const closeBackendSettingsModalBtn = document.getElementById('closeBackendSettingsModalBtn');
 const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+const geminiModelSelect = document.getElementById('geminiModelSelect');
 const customWsUrlInput = document.getElementById('customWsUrlInput');
 const saveBackendWsBtn = document.getElementById('saveBackendWsBtn');
 const resetBackendWsBtn = document.getElementById('resetBackendWsBtn');
@@ -120,7 +120,7 @@ const SCENARIO_PROMPTS = {
     business: "你是一位美國商業合作夥伴。學生正與你進行商業會議 (Business Negotiation)。請用專業職場英文進行討論。若用詞不合商業慣例，請給予修正建議。"
 };
 
-// ----------------- API Key 測試按鈕功能 -----------------
+// ----------------- API Key 測試與自動儲存功能 -----------------
 
 if (testApiKeyBtn) {
     testApiKeyBtn.addEventListener('click', async () => {
@@ -139,9 +139,13 @@ if (testApiKeyBtn) {
             const data = await response.json();
 
             if (response.ok && data.models) {
+                localStorage.setItem('speak_gemini_api_key', key);
+                if (geminiModelSelect) {
+                    localStorage.setItem('speak_gemini_model', geminiModelSelect.value);
+                }
                 testApiResult.style.color = '#34d399';
-                testApiResult.textContent = '✅ 連線成功！Gemini API Key 有效，可正常進行 AI 語音對話！';
-                addLog('API Key 測試成功：金鑰有效', 'success');
+                testApiResult.textContent = '✅ 連線成功！Gemini API Key 已驗證並自動儲存！';
+                addLog('API Key 測試成功並已自動儲存', 'success');
             } else {
                 testApiResult.style.color = '#f87171';
                 const errMsg = data.error?.message || 'Key 無效或尚未啟用 API 權限';
@@ -182,6 +186,9 @@ function getWebSocketUrl() {
 
 openBackendSettingsBtn.addEventListener('click', () => {
     geminiApiKeyInput.value = localStorage.getItem('speak_gemini_api_key') || '';
+    if (geminiModelSelect) {
+        geminiModelSelect.value = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash-exp';
+    }
     customWsUrlInput.value = localStorage.getItem('speak_custom_backend_ws') || '';
     if (testApiResult) testApiResult.textContent = '';
     backendSettingsModal.classList.remove('hidden');
@@ -192,10 +199,12 @@ closeBackendSettingsModalBtn.addEventListener('click', () => backendSettingsModa
 saveBackendWsBtn.addEventListener('click', () => {
     const keyVal = geminiApiKeyInput.value.trim();
     const wsVal = customWsUrlInput.value.trim();
+    const modelVal = geminiModelSelect ? geminiModelSelect.value : 'gemini-2.0-flash-exp';
 
     if (keyVal) {
         localStorage.setItem('speak_gemini_api_key', keyVal);
-        addLog('已成功儲存 Gemini API Key！可以直接連線進行對話了', 'success');
+        localStorage.setItem('speak_gemini_model', modelVal);
+        addLog(`已成功儲存 Gemini API Key 與模型 (${modelVal})！`, 'success');
     } else {
         localStorage.removeItem('speak_gemini_api_key');
     }
@@ -212,8 +221,10 @@ saveBackendWsBtn.addEventListener('click', () => {
 
 resetBackendWsBtn.addEventListener('click', () => {
     localStorage.removeItem('speak_gemini_api_key');
+    localStorage.removeItem('speak_gemini_model');
     localStorage.removeItem('speak_custom_backend_ws');
     geminiApiKeyInput.value = '';
+    if (geminiModelSelect) geminiModelSelect.value = 'gemini-2.0-flash-exp';
     customWsUrlInput.value = '';
     if (testApiResult) testApiResult.textContent = '';
     addLog('已重置 API Key 與後端設定', 'info');
@@ -600,20 +611,22 @@ function connectWebSocket() {
     const wsUrl = `${baseUrl}${connector}voice=${encodeURIComponent(selectedVoice)}&scenario=${encodeURIComponent(currentScenario)}`;
 
     const isDirectGemini = wsUrl.includes('generativelanguage.googleapis.com');
+    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash-exp';
+    const formattedModel = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
 
-    addLog(isDirectGemini ? "連線中：直連 Google Gemini Live API (無伺服器模式)" : `連線至後端 WebSocket: ${wsUrl}`, 'info');
+    addLog(isDirectGemini ? `連線中：直連 Google Gemini Live API (${selectedModel})` : `連線至後端 WebSocket: ${wsUrl}`, 'info');
 
     ws = new WebSocket(wsUrl);
 
     ws.onopen = async () => {
         isConnected = true;
-        addLog(`連線成功 (情境: ${currentScenario}, 聲線: ${selectedVoice})`, 'success');
+        addLog(`連線成功 (情境: ${currentScenario}, 模型: ${selectedModel}, 聲線: ${selectedVoice})`, 'success');
         updateUIState('connected');
 
         if (isDirectGemini) {
             const setupMsg = {
                 setup: {
-                    model: "models/gemini-3.1-flash-live",
+                    model: formattedModel,
                     generationConfig: {
                         responseModalities: ["AUDIO"],
                         speechConfig: {
@@ -634,7 +647,7 @@ function connectWebSocket() {
                 }
             };
             ws.send(JSON.stringify(setupMsg));
-            addLog("已發送 Gemini Live Setup 初始化訊息", "info");
+            addLog(`已發送 Gemini Live Setup 初始化訊息 (${formattedModel})`, "info");
         }
 
         await startAudioCapture();
@@ -688,13 +701,13 @@ function connectWebSocket() {
         if (!apiKey || apiKey.trim() === '') {
             addLog('連線失敗：尚未輸入 Gemini API Key！請在設定彈窗中貼上您的 API Key', 'error');
         } else {
-            addLog('WebSocket 連線失敗！請檢查 API Key 是否有效或網路連線。', 'error');
+            addLog('WebSocket 連線發送錯誤，請確認 API Key 與模型權限！', 'error');
         }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
         isConnected = false;
-        addLog('WebSocket 已斷開', 'info');
+        addLog(`WebSocket 已斷開 (關閉代碼: ${event.code}${event.reason ? ', 原因: ' + event.reason : ''})`, event.code === 1000 ? 'info' : 'error');
         stopAudioCapture();
         stopAndClearAudioQueue();
         updateUIState('disconnected');
