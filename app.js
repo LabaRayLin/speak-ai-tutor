@@ -3,14 +3,15 @@
  * 
  * 功能包含：
  * 1. 【直連 Gemini API Key】支援在網頁設定中輸入 Gemini API Key，在 GitHub Pages / 無伺服器環境下直接與 Google Gemini Live API 進行 WebSocket 雙向對話。
- * 2. 【自動提醒設定】在 GitHub Pages 上點擊開始對話若未輸入 API Key，自動彈出設定彈窗指引。
- * 3. 【跨平台 Emoji 相容修復】採用全平台字型無障礙相容圖示。
- * 4. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
- * 5. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
- * 6. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
- * 7. 【單字片語收藏庫】LocalStorage 持久化與管理。
- * 8. 【學習成績單】顯示說話時長、對話輪次與修正數。
- * 9. 【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
+ * 2. 【🧪 一鍵測試 API Key 連線】新增「🧪 測試 Key」按鈕，發送實時 Request 驗證金鑰有效性並給予回饋。
+ * 3. 【防範未設定 Key 斷線】點擊開始對話時若未設定 API Key，自動開啟 ⚙️ 設定視窗並聚焦 API Key 輸入框，避免 Mixed Content 斷線。
+ * 4. 【跨平台 Emoji 相容修復】採用全平台字型無障礙相容圖示。
+ * 5. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
+ * 6. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
+ * 7. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
+ * 8. 【單字片語收藏庫】LocalStorage 持久化與管理。
+ * 9. 【學習成績單】顯示說話時長、對話輪次與修正數。
+ * 10.【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
  */
 
 if ('serviceWorker' in navigator) {
@@ -66,6 +67,10 @@ const customWsUrlInput = document.getElementById('customWsUrlInput');
 const saveBackendWsBtn = document.getElementById('saveBackendWsBtn');
 const resetBackendWsBtn = document.getElementById('resetBackendWsBtn');
 
+// API Test Elements
+const testApiKeyBtn = document.getElementById('testApiKeyBtn');
+const testApiResult = document.getElementById('testApiResult');
+
 // State Variables
 let isConnected = false;
 let ws = null;
@@ -97,7 +102,7 @@ let activeSourceNodes = [];
 let isAiSpeaking = false;
 let isFirstChunkOfTurn = true;
 
-// Scenario Metadata & Prompts (全平台通用圖示)
+// Scenario Metadata & Prompts
 const SCENARIO_META = {
     freetalk: { name: 'Alex (American Tutor)', emoji: '🗣️', desc: '自由談論任何感興趣的話題...' },
     starbucks: { name: 'Jessica (Barista)', emoji: '☕', desc: '星巴克點餐：嘗試點一杯冰拿鐵！' },
@@ -113,6 +118,42 @@ const SCENARIO_PROMPTS = {
     airport: "你是一位在美國甘迺迪國際機場 (JFK Airport) 的海關人員。請用正式標準英文詢問學生的護照與訪美目的。若學生有錯誤，請予以溫和糾正。",
     business: "你是一位美國商業合作夥伴。學生正與你進行商業會議 (Business Negotiation)。請用專業職場英文進行討論。若用詞不合商業慣例，請給予修正建議。"
 };
+
+// ----------------- API Key 測試按鈕功能 -----------------
+
+if (testApiKeyBtn) {
+    testApiKeyBtn.addEventListener('click', async () => {
+        const key = geminiApiKeyInput.value.trim();
+        if (!key) {
+            testApiResult.style.color = '#f87171';
+            testApiResult.textContent = '❌ 請先輸入 API Key 再進行測試！';
+            return;
+        }
+
+        testApiResult.style.color = '#f59e0b';
+        testApiResult.textContent = '⏳ 正在測試與 Google Gemini 伺服器連線...';
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+            const data = await response.json();
+
+            if (response.ok && data.models) {
+                testApiResult.style.color = '#34d399';
+                testApiResult.textContent = '✅ 連線成功！Gemini API Key 有效，可正常進行 AI 語音對話！';
+                addLog('API Key 測試成功：金鑰有效', 'success');
+            } else {
+                testApiResult.style.color = '#f87171';
+                const errMsg = data.error?.message || 'Key 無效或尚未啟用 API 權限';
+                testApiResult.textContent = `❌ 測試失敗：${errMsg}`;
+                addLog(`API Key 測試失敗: ${errMsg}`, 'error');
+            }
+        } catch (err) {
+            testApiResult.style.color = '#f87171';
+            testApiResult.textContent = `❌ 網路連線錯誤：${err.message}`;
+            addLog(`API Key 測試網路錯誤: ${err.message}`, 'error');
+        }
+    });
+}
 
 // ----------------- WebSocket URL & API Key Resolution -----------------
 
@@ -141,6 +182,7 @@ function getWebSocketUrl() {
 openBackendSettingsBtn.addEventListener('click', () => {
     geminiApiKeyInput.value = localStorage.getItem('speak_gemini_api_key') || '';
     customWsUrlInput.value = localStorage.getItem('speak_custom_backend_ws') || '';
+    if (testApiResult) testApiResult.textContent = '';
     backendSettingsModal.classList.remove('hidden');
 });
 
@@ -152,7 +194,7 @@ saveBackendWsBtn.addEventListener('click', () => {
 
     if (keyVal) {
         localStorage.setItem('speak_gemini_api_key', keyVal);
-        addLog('已儲存 Gemini API Key (直連 Gemini Live API 模式)', 'success');
+        addLog('已成功儲存 Gemini API Key！可以直接連線進行對話了', 'success');
     } else {
         localStorage.removeItem('speak_gemini_api_key');
     }
@@ -172,6 +214,7 @@ resetBackendWsBtn.addEventListener('click', () => {
     localStorage.removeItem('speak_custom_backend_ws');
     geminiApiKeyInput.value = '';
     customWsUrlInput.value = '';
+    if (testApiResult) testApiResult.textContent = '';
     addLog('已重置 API Key 與後端設定', 'info');
     backendSettingsModal.classList.add('hidden');
 });
@@ -639,7 +682,14 @@ function connectWebSocket() {
         }
     };
 
-    ws.onerror = (error) => { addLog('WebSocket 連線失敗！請檢查 API Key 或網路連線設定。', 'error'); };
+    ws.onerror = (error) => {
+        const apiKey = localStorage.getItem('speak_gemini_api_key');
+        if (!apiKey || apiKey.trim() === '') {
+            addLog('連線失敗：尚未輸入 Gemini API Key！請在設定彈窗中貼上您的 API Key', 'error');
+        } else {
+            addLog('WebSocket 連線失敗！請檢查 API Key 是否有效或網路連線。', 'error');
+        }
+    };
 
     ws.onclose = () => {
         isConnected = false;
@@ -684,13 +734,13 @@ toggleBtn.addEventListener('click', () => {
     } else {
         const apiKey = localStorage.getItem('speak_gemini_api_key');
         const customWs = localStorage.getItem('speak_custom_backend_ws');
-        const isGithubPages = window.location.hostname.endsWith('github.io');
 
-        if (isGithubPages && (!apiKey || apiKey.trim() === '') && (!customWs || customWs.trim() === '')) {
+        if ((!apiKey || apiKey.trim() === '') && (!customWs || customWs.trim() === '')) {
             geminiApiKeyInput.value = '';
             backendSettingsModal.classList.remove('hidden');
-            addLog('請先填入您的 Gemini API Key 即可開啟免費對話！', 'info');
-            updateCaption("⚠️ 請在設定視窗貼上您的 Gemini API Key");
+            geminiApiKeyInput.focus();
+            addLog('請先在設定視窗貼上您的 Gemini API Key！', 'error');
+            updateCaption("⚠️ 請在上方設定視窗貼上 Gemini API Key");
             return;
         }
 

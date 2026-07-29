@@ -24,7 +24,9 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 確保頂部 Header 標題與 ⚙️ 設定按鈕在任何螢幕解析度下均不會被截斷 */
+    padding-top: 12px;
+    padding-bottom: 24px;
     overflow-x: hidden;
     position: relative;
 }
@@ -65,7 +67,7 @@ body {
 .app-container {
     width: 100%;
     max-width: 560px;
-    padding: 20px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -77,6 +79,8 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 8px 4px;
+    margin-bottom: 4px;
+    width: 100%;
 }
 
 .logo-area {
@@ -111,13 +115,13 @@ body {
 }
 
 .icon-btn {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
     border: 1px solid var(--card-border);
     color: var(--text-main);
-    padding: 6px 12px;
+    padding: 8px 12px;
     border-radius: 12px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -125,7 +129,7 @@ body {
 }
 
 .icon-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.16);
 }
 
 .vocab-badge {
@@ -339,7 +343,6 @@ body {
     color: var(--text-muted);
 }
 
-/* Subtitle Caption */
 .caption-container {
     width: 100%;
     margin-top: 14px;
@@ -367,7 +370,6 @@ body {
 .caption-icon { font-size: 1rem; flex-shrink: 0; }
 .caption-text { line-height: 1.4; word-break: break-word; }
 
-/* Grammar Correction Card */
 .correction-card {
     width: 100%;
     margin: 10px 0;
@@ -400,7 +402,6 @@ body {
 .correction-row.original { color: #f87171; text-decoration: line-through; }
 .correction-row.corrected { color: #34d399; font-weight: 500; }
 
-/* Wave Visualizer */
 .wave-visualizer {
     display: flex;
     align-items: center;
@@ -433,7 +434,6 @@ body {
     100% { height: 28px; }
 }
 
-/* Controls */
 .controls-area { width: 100%; }
 
 .btn {
@@ -471,7 +471,6 @@ body {
 
 .mic-icon { width: 20px; height: 20px; }
 
-/* Log Card */
 .log-card {
     background: var(--card-bg);
     backdrop-filter: blur(16px);
@@ -525,7 +524,6 @@ body {
 .log-item.success { border-left: 3px solid var(--accent); }
 .log-item.error { border-left: 3px solid var(--danger); }
 
-/* Modals Overlay (Vocab Bank & Post Session Report) */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;

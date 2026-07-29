@@ -93,7 +93,7 @@
             <div class="avatar-wrapper">
                 <div class="pulse-ring" id="pulseRing"></div>
                 <div class="avatar-circle" id="avatarCircle">
-                    <span class="avatar-emoji" id="avatarEmoji">🇺🇸</span>
+                    <span class="avatar-emoji" id="avatarEmoji">🗣️</span>
                 </div>
             </div>
 
@@ -162,7 +162,7 @@
         </section>
     </div>
 
-    <!-- Modal 1: Saved Vocab & Phrase Bank (Speak App Feature 4) -->
+    <!-- Modal 1: Saved Vocab & Phrase Bank -->
     <div class="modal-overlay hidden" id="vocabModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -175,7 +175,7 @@
         </div>
     </div>
 
-    <!-- Modal 2: Post-Session Summary Report (Speak App Feature 3) -->
+    <!-- Modal 2: Post-Session Summary Report -->
     <div class="modal-overlay hidden" id="summaryModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -206,7 +206,7 @@
         </div>
     </div>
 
-    <!-- Modal 3: Settings Modal (Gemini API Key & Custom Backend WS) -->
+    <!-- Modal 3: Settings Modal (Gemini API Key & Custom Backend WS & API Test) -->
     <div class="modal-overlay hidden" id="backendSettingsModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -215,13 +215,19 @@
             </div>
             <div class="modal-body">
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <!-- Option 1: Direct Gemini API Key -->
+                    <!-- Option 1: Direct Gemini API Key with Test Button -->
                     <div style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:12px;">
                         <h4 style="font-size:0.9rem; color:#e0e7ff; margin-bottom:6px;">🔑 方案一：直連 Gemini API Key (推薦 GitHub Pages)</h4>
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
                             填入您的 Gemini API Key 後，網頁即可直接與 Google Gemini Live API 進行無伺服器 WebSocket 雙向語音對話！
                         </p>
-                        <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
+                        <div style="display:flex; gap:8px;">
+                            <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
+                            <button id="testApiKeyBtn" class="icon-btn" style="white-space:nowrap; background:rgba(99,102,241,0.3); border-color:var(--primary); color:#fff; font-weight:600;">
+                                🧪 測試 Key
+                            </button>
+                        </div>
+                        <div id="testApiResult" style="font-size:0.8rem; margin-top:6px; min-height:18px;"></div>
                     </div>
 
                     <!-- Option 2: Custom Backend WS URL -->
