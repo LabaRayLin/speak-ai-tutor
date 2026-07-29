@@ -3,12 +3,14 @@
  * 
  * 功能包含：
  * 1. 【直連 Gemini API Key】支援在網頁設定中輸入 Gemini API Key，在 GitHub Pages / 無伺服器環境下直接與 Google Gemini Live API 進行 WebSocket 雙向對話。
- * 2. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
- * 3. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
- * 4. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
- * 5. 【單字片語收藏庫】LocalStorage 持久化與管理。
- * 6. 【學習成績單】顯示說話時長、對話輪次與修正數。
- * 7. 【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
+ * 2. 【自動提醒設定】在 GitHub Pages 上點擊開始對話若未輸入 API Key，自動彈出設定彈窗指引。
+ * 3. 【跨平台 Emoji 相容修復】採用全平台字型無障礙相容圖示。
+ * 4. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
+ * 5. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
+ * 6. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
+ * 7. 【單字片語收藏庫】LocalStorage 持久化與管理。
+ * 8. 【學習成績單】顯示說話時長、對話輪次與修正數。
+ * 9. 【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
  */
 
 // Register PWA Service Worker
@@ -96,9 +98,9 @@ let activeSourceNodes = [];
 let isAiSpeaking = false;
 let isFirstChunkOfTurn = true;
 
-// Scenario Metadata & Prompts
+// Scenario Metadata & Prompts (全平台通用圖示)
 const SCENARIO_META = {
-    freetalk: { name: 'Alex (American Tutor)', emoji: '🇺🇸', desc: '自由談論任何感興趣的話題...' },
+    freetalk: { name: 'Alex (American Tutor)', emoji: '🗣️', desc: '自由談論任何感興趣的話題...' },
     starbucks: { name: 'Jessica (Barista)', emoji: '☕', desc: '星巴克點餐：嘗試點一杯冰拿鐵！' },
     interview: { name: 'David (Interviewer)', emoji: '💼', desc: '外商面試：回答工作經驗與優缺點...' },
     airport: { name: 'Officer Smith', emoji: '✈️', desc: '入境檢查：回答訪美目的與停留天數...' },
@@ -116,19 +118,16 @@ const SCENARIO_PROMPTS = {
 // ----------------- WebSocket URL & API Key Resolution -----------------
 
 function getWebSocketUrl() {
-    // 1. 優先檢查是否有填寫 Gemini API Key (直連 Google Gemini Live API)
     const apiKey = localStorage.getItem('speak_gemini_api_key');
     if (apiKey && apiKey.trim() !== '') {
         return `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(apiKey.trim())}`;
     }
 
-    // 2. 檢查是否有自訂中繼後端 URL (例如 Render / Railway)
     const savedWs = localStorage.getItem('speak_custom_backend_ws');
     if (savedWs && savedWs.trim() !== '') {
         return savedWs.trim();
     }
 
-    // 3. 預設連線至本地後端 (localhost:8000)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname || 'localhost';
     
@@ -568,7 +567,6 @@ function connectWebSocket() {
         addLog(`連線成功 (情境: ${currentScenario}, 聲線: ${selectedVoice})`, 'success');
         updateUIState('connected');
 
-        // 如果是直連 Gemini Live API，立刻由前端發送 setup 初始化訊息
         if (isDirectGemini) {
             const setupMsg = {
                 setup: {
@@ -685,6 +683,19 @@ toggleBtn.addEventListener('click', () => {
     if (isConnected) {
         disconnectWebSocket();
     } else {
+        const apiKey = localStorage.getItem('speak_gemini_api_key');
+        const customWs = localStorage.getItem('speak_custom_backend_ws');
+        const isGithubPages = window.location.hostname.endsWith('github.io');
+
+        // 如果在 GitHub Pages 上未設定 API Key 且未設定自訂後端，自動彈出設定彈窗指引
+        if (isGithubPages && (!apiKey || apiKey.trim() === '') && (!customWs || customWs.trim() === '')) {
+            geminiApiKeyInput.value = '';
+            backendSettingsModal.classList.remove('hidden');
+            addLog('請先填入您的 Gemini API Key 即可開啟免費對話！', 'info');
+            updateCaption("⚠️ 請在設定視窗貼上您的 Gemini API Key");
+            return;
+        }
+
         updateCaption("");
         connectWebSocket();
     }
