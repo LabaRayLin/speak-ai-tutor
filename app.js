@@ -11,7 +11,6 @@
  * 7. 商業級 8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)
  */
 
-// Register PWA Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')

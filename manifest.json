@@ -1,0 +1,18 @@
+{
+  "name": "Speak AI English Tutor",
+  "short_name": "Speak AI",
+  "description": "即時語音對話與文法糾正的 AI 英文家教 (Powered by Gemini Live API)",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f19",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
