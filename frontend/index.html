@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Speak AI Tutor - Complete English Learning App</title>
+    
+    <!-- PWA Primary Meta Tags -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="全功能 Speak AI 英文家教 - 情境角色扮演、即時文法糾正卡片與單字庫">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    
+    <!-- iOS PWA Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Speak AI">
+    <link rel="apple-touch-icon" href="icon.svg">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-decor">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">🗣️</div>
+                <div>
+                    <h1>Speak AI Tutor</h1>
+                    <p class="subtitle">Gemini Live Native Audio Mode</p>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <!-- Saved Vocab Bank Trigger Button -->
+                <button id="openVocabBtn" class="icon-btn" title="查看收藏單字片語庫">
+                    ⭐ <span class="vocab-badge" id="vocabCount">0</span>
+                </button>
+
+                <!-- Voice Selector -->
+                <select id="voiceSelect" class="voice-select" title="選擇 AI 家教聲線">
+                    <option value="Puck">👦 Puck (美音男聲)</option>
+                    <option value="Kore">👩 Kore (美音女聲)</option>
+                    <option value="Aoede">👩‍🏫 Aoede (溫和女聲)</option>
+                    <option value="Fenrir">🧔 Fenrir (渾厚男聲)</option>
+                </select>
+
+                <div class="status-badge" id="statusBadge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">未連線</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scenario Bar (Speak App Feature 1: Roleplay Scenarios) -->
+        <section class="scenario-bar">
+            <label class="section-label">🎯 選擇練習情境：</label>
+            <div class="scenario-chips">
+                <button class="chip active" data-scenario="freetalk">💬 自由對話</button>
+                <button class="chip" data-scenario="starbucks">☕ 星巴克點餐</button>
+                <button class="chip" data-scenario="interview">💼 外商面試</button>
+                <button class="chip" data-scenario="airport">✈️ 機場過關</button>
+                <button class="chip" data-scenario="business">🤝 商業談判</button>
+            </div>
+        </section>
+
+        <!-- Main Voice Visualizer Card -->
+        <main class="tutor-card">
+            <div class="card-top-bar">
+                <div class="speed-selector">
+                    <span>語速：</span>
+                    <button class="speed-btn" data-speed="0.8">0.8x</button>
+                    <button class="speed-btn active" data-speed="1.0">1.0x</button>
+                    <button class="speed-btn" data-speed="1.2">1.2x</button>
+                </div>
+            </div>
+
+            <div class="avatar-wrapper">
+                <div class="pulse-ring" id="pulseRing"></div>
+                <div class="avatar-circle" id="avatarCircle">
+                    <span class="avatar-emoji" id="avatarEmoji">🇺🇸</span>
+                </div>
+            </div>
+
+            <div class="tutor-info">
+                <h2 id="tutorName">Alex (Native American Tutor)</h2>
+                <p id="tutorStatus">點擊下方「開始對話」即可進行即時口語練習</p>
+            </div>
+
+            <!-- Real-time Live Subtitle Banner -->
+            <div class="caption-container" id="captionContainer">
+                <div class="caption-bubble" id="captionBubble">
+                    <span class="caption-icon">💬</span>
+                    <span class="caption-text" id="captionText">點擊按鈕開啟麥克風與 AI 家教練習英文...</span>
+                </div>
+            </div>
+
+            <!-- Grammar Correction Card Component (Speak App Feature 2: Real-time Correction) -->
+            <div class="correction-card hidden" id="correctionCard">
+                <div class="correction-header">
+                    <span>🛠️ 文法與地道表達修復建議</span>
+                    <button id="saveCorrectionBtn" class="btn-text">⭐ 收藏此卡片</button>
+                </div>
+                <div class="correction-body">
+                    <div class="correction-row original">
+                        <span class="label">原句：</span>
+                        <span id="originalText">--</span>
+                    </div>
+                    <div class="correction-row corrected">
+                        <span class="label">建議修正：</span>
+                        <span id="correctedText">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Wave Visualizer -->
+            <div class="wave-visualizer">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="controls-area">
+                <button id="toggleBtn" class="btn btn-primary">
+                    <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="22"/>
+                    </svg>
+                    <span id="btnText">開始連線與對話</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Dynamic Log / Live Feedback Sub-window -->
+        <section class="log-card">
+            <div class="log-header">
+                <h3>即時對話與系統日誌</h3>
+                <button id="clearLogBtn" class="btn-text">清除日誌</button>
+            </div>
+            <div class="log-content" id="logContent">
+                <div class="log-item info">系統準備就緒，請點擊按鈕開啟麥克風與連線。</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal 1: Saved Vocab & Phrase Bank (Speak App Feature 4) -->
+    <div class="modal-overlay hidden" id="vocabModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⭐ 我的單字與地道片語收藏庫</h3>
+                <button class="close-btn" id="closeVocabModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="vocabList">
+                <div class="empty-state">尚無收藏卡片。可以在對話中點擊「⭐ 收藏此卡片」將重點句加入收藏庫。</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Post-Session Summary Report (Speak App Feature 3) -->
+    <div class="modal-overlay hidden" id="summaryModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>🎉 口語練習成績單與學習報告</h3>
+                <button class="close-btn" id="closeSummaryModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-num" id="statDuration">0:00</div>
+                        <div class="stat-title">總說話時長</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" id="statTurns">0</div>
+                        <div class="stat-title">對話輪次</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" id="statCorrections">0</div>
+                        <div class="stat-title">修正建議</div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h4>💡 綜合評價與建議</h4>
+                    <p id="reportSummary">發音清晰，口語表達自然！建議多使用定冠詞與過去式態，持續保持練習。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

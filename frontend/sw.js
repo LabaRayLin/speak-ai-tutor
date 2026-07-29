@@ -1,0 +1,65 @@
+const CACHE_NAME = 'speak-ai-tutor-v2';
+const ASSETS_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/app.js',
+  '/manifest.json',
+  '/icon.svg'
+];
+
+// Install Event: Cache Static App Shell
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[ServiceWorker] Pre-caching offline app shell v2');
+      return cache.addAll(ASSETS_TO_CACHE);
+    }).then(() => self.skipWaiting())
+  );
+});
+
+// Activate Event: Cleanup Old Caches Instantly
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('[ServiceWorker] Purging outdated cache:', cache);
+            return caches.delete(cache);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
+// Fetch Event: Stale-While-Revalidate Strategy for Lightning Fast & Up-to-Date Performance
+self.addEventListener('fetch', (event) => {
+  // Never intercept WebSocket connections
+  if (event.request.url.startsWith('ws:') || event.request.url.startsWith('wss:')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === 'basic'
+          ) {
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        }).catch((err) => {
+          console.warn('[ServiceWorker] Offline fallback for:', event.request.url);
+        });
+
+        // Return cached version immediately if available, while updating in background
+        return cachedResponse || fetchPromise;
+      });
+    })
+  );
+});
