@@ -611,10 +611,15 @@ function connectWebSocket() {
 
     const baseUrl = getWebSocketUrl();
     const selectedVoice = voiceSelect.value || "Puck";
-    const connector = baseUrl.includes('?') ? '&' : '?';
-    const wsUrl = `${baseUrl}${connector}voice=${encodeURIComponent(selectedVoice)}&scenario=${encodeURIComponent(currentScenario)}`;
-
-    const isDirectGemini = wsUrl.includes('generativelanguage.googleapis.com');
+    
+    const isDirectGemini = baseUrl.includes('generativelanguage.googleapis.com');
+    let wsUrl = baseUrl;
+    
+    // 自訂後端 (如 FastAPI) 才會透過 URL Query 傳遞 voice 與 scenario 參數
+    if (!isDirectGemini) {
+        const connector = baseUrl.includes('?') ? '&' : '?';
+        wsUrl = `${baseUrl}${connector}voice=${encodeURIComponent(selectedVoice)}&scenario=${encodeURIComponent(currentScenario)}`;
+    }
     const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash-exp';
     let formattedModel = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
 
