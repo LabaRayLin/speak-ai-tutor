@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speak-ai-tutor-v3';
+const CACHE_NAME = 'speak-ai-tutor-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
