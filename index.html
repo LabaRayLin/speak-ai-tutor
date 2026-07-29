@@ -42,8 +42,8 @@
             </div>
             
             <div class="header-right">
-                <!-- Backend Settings Button -->
-                <button id="openBackendSettingsBtn" class="icon-btn" title="後端連線設定">
+                <!-- Settings Button (API Key & Backend WS) -->
+                <button id="openBackendSettingsBtn" class="icon-btn" title="API Key 與連線設定">
                     ⚙️
                 </button>
 
@@ -206,24 +206,37 @@
         </div>
     </div>
 
-    <!-- Modal 3: Backend Settings Modal (For GitHub Pages Deployment) -->
+    <!-- Modal 3: Settings Modal (Gemini API Key & Custom Backend WS) -->
     <div class="modal-overlay hidden" id="backendSettingsModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>⚙️ 後端 WebSocket 連線設定</h3>
+                <h3>⚙️ Gemini API Key 與連線設定</h3>
                 <button class="close-btn" id="closeBackendSettingsModalBtn">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="font-size:0.85rem; color:var(--text-muted);">
-                    GitHub Pages 屬靜態網站代管，若在 `github.io` 開啟，請填入您部署的雲端後端 URL（例如 Render / Railway / localtunnel 提供的 WebSocket 網址，如 `wss://your-backend.onrender.com/ws`）或留空使用本地預設。
-                </p>
-                <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-                    <label style="font-size:0.82rem; color:#fff;">WebSocket 後端 URL：</label>
-                    <input type="text" id="customWsUrlInput" placeholder="wss://your-backend.onrender.com/ws" style="padding:10px; border-radius:10px; border:1px solid var(--card-border); background:rgba(255,255,255,0.06); color:#fff; font-family:inherit; font-size:0.9rem; outline:none;" />
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <!-- Option 1: Direct Gemini API Key -->
+                    <div style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:12px;">
+                        <h4 style="font-size:0.9rem; color:#e0e7ff; margin-bottom:6px;">🔑 方案一：直連 Gemini API Key (推薦 GitHub Pages)</h4>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                            填入您的 Gemini API Key 後，網頁即可直接與 Google Gemini Live API 進行無伺服器 WebSocket 雙向語音對話！
+                        </p>
+                        <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
+                    </div>
+
+                    <!-- Option 2: Custom Backend WS URL -->
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:12px; padding:12px;">
+                        <h4 style="font-size:0.9rem; color:#fff; margin-bottom:6px;">🌐 方案二：自訂 Python 中繼後端 URL (選填)</h4>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
+                            若您有部署 Python 後端 (如 Render / Railway)，可輸入 `wss://your-backend.onrender.com/ws`。
+                        </p>
+                        <input type="text" id="customWsUrlInput" placeholder="wss://your-backend.onrender.com/ws" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
+
+                <div style="display:flex; gap:10px; margin-top:14px;">
                     <button id="saveBackendWsBtn" class="btn btn-primary" style="padding:10px;">儲存設定</button>
-                    <button id="resetBackendWsBtn" class="btn-text" style="color:var(--danger);">重置預設</button>
+                    <button id="resetBackendWsBtn" class="btn-text" style="color:var(--danger);">清除與重置</button>
                 </div>
             </div>
         </div>

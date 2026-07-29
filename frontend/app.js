@@ -2,13 +2,13 @@
  * Speak AI Tutor - Full Feature Speak App Replica Logic
  * 
  * 功能包含：
- * 1. 情境角色扮演 (Roleplay Scenarios: 自由對話、星巴克點餐、外商面試、機場過關、商業談判)
- * 2. 語速調整 (Audio Playback Rate: 0.8x, 1.0x, 1.2x)
- * 3. 即時文法與地道表達修復卡片 (Grammar & Expression Correction Card)
- * 4. 單字與地道片語收藏庫 (Saved Vocabulary Bank + LocalStorage)
- * 5. 對話結束口語學習報告 (Post-Session Summary Report & Statistics)
- * 6. 支援 GitHub Pages 自訂雲端後端 WebSocket URL 設定
- * 7. 商業級 8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)
+ * 1. 【直連 Gemini API Key】支援在網頁設定中輸入 Gemini API Key，在 GitHub Pages / 無伺服器環境下直接與 Google Gemini Live API 進行 WebSocket 雙向對話。
+ * 2. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
+ * 3. 【語速調整】0.8x, 1.0x, 1.2x Web Audio Playback Rate。
+ * 4. 【即時文法修復卡片】分析建議並標示原句 (劃線紅字) 與建議句 (綠字)。
+ * 5. 【單字片語收藏庫】LocalStorage 持久化與管理。
+ * 6. 【學習成績單】顯示說話時長、對話輪次與修正數。
+ * 7. 【商業級效能】8KB Chunked Base64 與連續 3 幀防抖打斷機制 (Debounced Barge-in)。
  */
 
 // Register PWA Service Worker
@@ -56,10 +56,11 @@ const statDuration = document.getElementById('statDuration');
 const statTurns = document.getElementById('statTurns');
 const statCorrections = document.getElementById('statCorrections');
 
-// Backend Settings Modal
+// Backend & API Key Settings Modal
 const backendSettingsModal = document.getElementById('backendSettingsModal');
 const openBackendSettingsBtn = document.getElementById('openBackendSettingsBtn');
 const closeBackendSettingsModalBtn = document.getElementById('closeBackendSettingsModalBtn');
+const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
 const customWsUrlInput = document.getElementById('customWsUrlInput');
 const saveBackendWsBtn = document.getElementById('saveBackendWsBtn');
 const resetBackendWsBtn = document.getElementById('resetBackendWsBtn');
@@ -95,7 +96,7 @@ let activeSourceNodes = [];
 let isAiSpeaking = false;
 let isFirstChunkOfTurn = true;
 
-// Scenario Metadata
+// Scenario Metadata & Prompts
 const SCENARIO_META = {
     freetalk: { name: 'Alex (American Tutor)', emoji: '🇺🇸', desc: '自由談論任何感興趣的話題...' },
     starbucks: { name: 'Jessica (Barista)', emoji: '☕', desc: '星巴克點餐：嘗試點一杯冰拿鐵！' },
@@ -104,18 +105,33 @@ const SCENARIO_META = {
     business: { name: 'Michael (Partner)', emoji: '🤝', desc: '商業會議：談判合作細節與報價...' }
 };
 
-// ----------------- Backend WS URL Settings -----------------
+const SCENARIO_PROMPTS = {
+    freetalk: "你是一位專業、有耐心的美國籍英文家教 Alex。請與學生進行自然的日常自由對話。回覆必須簡短自然。如果學生的句子有文法或用詞錯誤，請先指出並簡單糾正，再接續對話。",
+    starbucks: "你是一位在星巴克工作的美國咖啡師 (Barista)。學生是一位前來點餐的顧客。請用熱情友善的英文引導學生點餐。若學生的句子有文法錯誤，請先溫和糾正，再回覆顧客。",
+    interview: "你是一位美國跨國科技公司的外商主考官 (Job Interviewer)。學生是一位前來面試的求職者。請用專業態度提問面試問題。若學生有文法錯誤，請糾正後再繼續。",
+    airport: "你是一位在美國甘迺迪國際機場 (JFK Airport) 的海關人員。請用正式標準英文詢問學生的護照與訪美目的。若學生有錯誤，請予以溫和糾正。",
+    business: "你是一位美國商業合作夥伴。學生正與你進行商業會議 (Business Negotiation)。請用專業職場英文進行討論。若用詞不合商業慣例，請給予修正建議。"
+};
+
+// ----------------- WebSocket URL & API Key Resolution -----------------
 
 function getWebSocketUrl() {
+    // 1. 優先檢查是否有填寫 Gemini API Key (直連 Google Gemini Live API)
+    const apiKey = localStorage.getItem('speak_gemini_api_key');
+    if (apiKey && apiKey.trim() !== '') {
+        return `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(apiKey.trim())}`;
+    }
+
+    // 2. 檢查是否有自訂中繼後端 URL (例如 Render / Railway)
     const savedWs = localStorage.getItem('speak_custom_backend_ws');
     if (savedWs && savedWs.trim() !== '') {
         return savedWs.trim();
     }
 
+    // 3. 預設連線至本地後端 (localhost:8000)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname || 'localhost';
     
-    // 如果部署在 GitHub Pages (github.io) 且未設定雲端 URL
     if (host.endsWith('github.io')) {
         return `ws://localhost:8000/ws`;
     }
@@ -125,6 +141,7 @@ function getWebSocketUrl() {
 }
 
 openBackendSettingsBtn.addEventListener('click', () => {
+    geminiApiKeyInput.value = localStorage.getItem('speak_gemini_api_key') || '';
     customWsUrlInput.value = localStorage.getItem('speak_custom_backend_ws') || '';
     backendSettingsModal.classList.remove('hidden');
 });
@@ -132,21 +149,32 @@ openBackendSettingsBtn.addEventListener('click', () => {
 closeBackendSettingsModalBtn.addEventListener('click', () => backendSettingsModal.classList.add('hidden'));
 
 saveBackendWsBtn.addEventListener('click', () => {
-    const val = customWsUrlInput.value.trim();
-    if (val) {
-        localStorage.setItem('speak_custom_backend_ws', val);
-        addLog(`後端 URL 已設定為: ${val}`, 'success');
+    const keyVal = geminiApiKeyInput.value.trim();
+    const wsVal = customWsUrlInput.value.trim();
+
+    if (keyVal) {
+        localStorage.setItem('speak_gemini_api_key', keyVal);
+        addLog('已儲存 Gemini API Key (直連 Gemini Live API 模式)', 'success');
+    } else {
+        localStorage.removeItem('speak_gemini_api_key');
+    }
+
+    if (wsVal) {
+        localStorage.setItem('speak_custom_backend_ws', wsVal);
+        addLog(`後端 URL 已設定為: ${wsVal}`, 'success');
     } else {
         localStorage.removeItem('speak_custom_backend_ws');
-        addLog('已清除自訂後端 URL，使用預設值', 'info');
     }
+
     backendSettingsModal.classList.add('hidden');
 });
 
 resetBackendWsBtn.addEventListener('click', () => {
+    localStorage.removeItem('speak_gemini_api_key');
     localStorage.removeItem('speak_custom_backend_ws');
+    geminiApiKeyInput.value = '';
     customWsUrlInput.value = '';
-    addLog('已重置後端連線設定', 'info');
+    addLog('已重置 API Key 與後端設定', 'info');
     backendSettingsModal.classList.add('hidden');
 });
 
@@ -529,7 +557,9 @@ function connectWebSocket() {
     const connector = baseUrl.includes('?') ? '&' : '?';
     const wsUrl = `${baseUrl}${connector}voice=${encodeURIComponent(selectedVoice)}&scenario=${encodeURIComponent(currentScenario)}`;
 
-    addLog(`連線至後端 WebSocket: ${wsUrl}`, 'info');
+    const isDirectGemini = wsUrl.includes('generativelanguage.googleapis.com');
+
+    addLog(isDirectGemini ? "連線中：直連 Google Gemini Live API (無伺服器模式)" : `連線至後端 WebSocket: ${wsUrl}`, 'info');
 
     ws = new WebSocket(wsUrl);
 
@@ -537,6 +567,35 @@ function connectWebSocket() {
         isConnected = true;
         addLog(`連線成功 (情境: ${currentScenario}, 聲線: ${selectedVoice})`, 'success');
         updateUIState('connected');
+
+        // 如果是直連 Gemini Live API，立刻由前端發送 setup 初始化訊息
+        if (isDirectGemini) {
+            const setupMsg = {
+                setup: {
+                    model: "models/gemini-3.1-flash-live",
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: {
+                                    voiceName: selectedVoice
+                                }
+                            }
+                        }
+                    },
+                    systemInstruction: {
+                        parts: [
+                            {
+                                text: SCENARIO_PROMPTS[currentScenario] || SCENARIO_PROMPTS["freetalk"]
+                            }
+                        ]
+                    }
+                }
+            };
+            ws.send(JSON.stringify(setupMsg));
+            addLog("已發送 Gemini Live Setup 初始化訊息", "info");
+        }
+
         await startAudioCapture();
     };
 
@@ -545,8 +604,8 @@ function connectWebSocket() {
             const response = JSON.parse(event.data);
 
             if (response.error) {
-                addLog(`錯誤: ${response.error}`, 'error');
-                updateCaption(`⚠️ ${response.error}`);
+                addLog(`錯誤: ${JSON.stringify(response.error)}`, 'error');
+                updateCaption(`⚠️ API 錯誤: ${response.error.message || response.error}`);
                 return;
             }
 
@@ -583,7 +642,7 @@ function connectWebSocket() {
         }
     };
 
-    ws.onerror = (error) => { addLog('WebSocket 連線失敗，請檢查後端網址與網路連線！', 'error'); };
+    ws.onerror = (error) => { addLog('WebSocket 連線失敗！請檢查 API Key 或網路連線設定。', 'error'); };
 
     ws.onclose = () => {
         isConnected = false;
@@ -631,7 +690,6 @@ toggleBtn.addEventListener('click', () => {
     }
 });
 
-// 情境切換
 scenarioChips.forEach(chip => {
     chip.addEventListener('click', () => {
         scenarioChips.forEach(c => c.classList.remove('active'));
@@ -649,7 +707,6 @@ scenarioChips.forEach(chip => {
     });
 });
 
-// 語速切換
 speedBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         speedBtns.forEach(b => b.classList.remove('active'));
@@ -659,7 +716,6 @@ speedBtns.forEach(btn => {
     });
 });
 
-// 聲線切換
 voiceSelect.addEventListener('change', () => {
     if (isConnected) {
         addLog(`聲線切換為 ${voiceSelect.value}...`, 'info');
@@ -674,5 +730,4 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// 初始化收藏載入
 updateVocabUI();
