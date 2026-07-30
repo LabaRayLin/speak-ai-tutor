@@ -2,7 +2,7 @@
  * Speak AI Tutor - Full Feature Speak App Replica Logic
  * 
  * 功能包含：
- * 1. 【直連 Gemini API Key 與模型選擇】支援選擇帳號可用模型（如 gemini-2.0-flash-exp、gemini-2.5-flash、gemini-3.1-pro），直接與 Google Gemini Live API 進行 WebSocket 雙向語音對話。
+ * 1. 【直連 Gemini API Key 與模型選擇】支援選擇帳號可用模型（如 gemini-live-2.5-flash-native-audio、gemini-2.5-flash、gemini-3.1-pro），直接與 Google Gemini Live API 進行 WebSocket 雙向語音對話。
  * 2. 【🧪 一鍵測試 API Key 連線】發送實時 Request 驗證金鑰有效性並給予回饋。
  * 3. 【防範未設定 Key 斷線】點擊開始對話時若未設定 API Key，自動開啟 ⚙️ 設定視窗並聚焦 API Key 輸入框。
  * 4. 【情境角色扮演】自由對話、星巴克點餐、外商面試、機場過關、商業談判。
@@ -43,6 +43,7 @@ const correctionCard = document.getElementById('correctionCard');
 const originalTextEl = document.getElementById('originalText');
 const correctedTextEl = document.getElementById('correctedText');
 const saveCorrectionBtn = document.getElementById('saveCorrectionBtn');
+const explanationTextEl = document.getElementById('explanationText');
 
 // Modals
 const vocabModal = document.getElementById('vocabModal');
@@ -113,11 +114,11 @@ const SCENARIO_META = {
 };
 
 const SCENARIO_PROMPTS = {
-    freetalk: "你是一位專業、有耐心的美國籍英文家教 Alex。請與學生進行自然的日常自由對話。回覆必須簡短自然。如果學生的句子有文法或用詞錯誤，請先指出並簡單糾正，再接續對話。",
-    starbucks: "你是一位在星巴克工作的美國咖啡師 (Barista)。學生是一位前來點餐的顧客。請用熱情友善的英文引導學生點餐。若學生的句子有文法錯誤，請先溫和糾正，再回覆顧客。",
-    interview: "你是一位美國跨國科技公司的外商主考官 (Job Interviewer)。學生是一位前來面試的求職者。請用專業態度提問面試問題。若學生有文法錯誤，請糾正後再繼續。",
-    airport: "你是一位在美國甘迺迪國際機場 (JFK Airport) 的海關人員。請用正式標準英文詢問學生的護照與訪美目的。若學生有錯誤，請予以溫和糾正。",
-    business: "你是一位美國商業合作夥伴。學生正與你進行商業會議 (Business Negotiation)。請用專業職場英文進行討論。若用詞不合商業慣例，請給予修正建議。"
+    freetalk: "你是一位專業、有耐心的美國籍英文家教 Alex。請與學生進行自然的日常自由對話。回覆必須簡短自然。如果學生的句子有文法或用詞錯誤，請先指出並簡單糾正，再接續對話。\n\n【糾正格式約束】如果學生的句子有文法、用詞或不道地的錯誤，請在你的語音回覆結尾，額外用以下特殊語法輸出糾正卡片：\n[[CORRECTION|學生的原句|道地的正確說法|繁體中文修改建議說明]]\n例如：[[CORRECTION|I go to school yesterday|I went to school yesterday|應使用過去式 went，因為 yesterday 表示過去的時間]]\n如果學生沒有錯誤，就不需要加入 [[CORRECTION]] 標記。",
+    starbucks: "你是一位在星巴克工作的美國咖啡師 (Barista)。學生是一位前來點餐的顧客。請用熱情友善的英文引導學生點餐。若學生的句子有文法錯誤，請先溫和糾正，再回覆顧客。\n\n【糾正格式約束】如果學生的句子有文法、用詞或不道地的錯誤，請在你的語音回覆結尾，額外用以下特殊語法輸出糾正卡片：\n[[CORRECTION|學生的原句|道地的正確說法|繁體中文修改建議說明]]\n例如：[[CORRECTION|I go to school yesterday|I went to school yesterday|應使用過去式 went，因為 yesterday 表示過去的時間]]\n如果學生沒有錯誤，就不需要加入 [[CORRECTION]] 標記。",
+    interview: "你是一位美國跨國科技公司的外商主考官 (Job Interviewer)。學生是一位前來面試的求職者。請用專業態度提問面試問題。若學生有文法錯誤，請糾正後再繼續。\n\n【糾正格式約束】如果學生的句子有文法、用詞或不道地的錯誤，請在你的語音回覆結尾，額外用以下特殊語法輸出糾正卡片：\n[[CORRECTION|學生的原句|道地的正確說法|繁體中文修改建議說明]]\n例如：[[CORRECTION|I go to school yesterday|I went to school yesterday|應使用過去式 went，因為 yesterday 表示過去的時間]]\n如果學生沒有錯誤，就不需要加入 [[CORRECTION]] 標記。",
+    airport: "你是一位在美國甘迺迪國際機場 (JFK Airport) 的海關人員。請用正式標準英文詢問學生的護照與訪美目的。若學生有錯誤，請予以溫和糾正。\n\n【糾正格式約束】如果學生的句子有文法、用詞或不道地的錯誤，請在你的語音回覆結尾，額外用以下特殊語法輸出糾正卡片：\n[[CORRECTION|學生的原句|道地的正確說法|繁體中文修改建議說明]]\n例如：[[CORRECTION|I go to school yesterday|I went to school yesterday|應使用過去式 went，因為 yesterday 表示過去的時間]]\n如果學生沒有錯誤，就不需要加入 [[CORRECTION]] 標記。",
+    business: "你是一位美國商業合作夥伴。學生正與你進行商業會議 (Business Negotiation)。請用專業職場英文進行討論。若用詞不合商業慣例，請給予修正建議。\n\n【糾正格式約束】如果學生的句子有文法、用詞或不道地的錯誤，請在你的語音回覆結尾，額外用以下特殊語法輸出糾正卡片：\n[[CORRECTION|學生的原句|道地的正確說法|繁體中文修改建議說明]]\n例如：[[CORRECTION|I go to school yesterday|I went to school yesterday|應使用過去式 went，因為 yesterday 表示過去的時間]]\n如果學生沒有錯誤，就不需要加入 [[CORRECTION]] 標記。"
 };
 
 // ----------------- API Key 測試與自動儲存功能 -----------------
@@ -165,7 +166,7 @@ if (testApiKeyBtn) {
 function getWebSocketUrl() {
     const apiKey = localStorage.getItem('speak_gemini_api_key');
     if (apiKey && apiKey.trim() !== '') {
-        return `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(apiKey.trim())}`;
+        return `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${encodeURIComponent(apiKey.trim())}`;
     }
 
     const savedWs = localStorage.getItem('speak_custom_backend_ws');
@@ -187,7 +188,7 @@ function getWebSocketUrl() {
 openBackendSettingsBtn.addEventListener('click', () => {
     geminiApiKeyInput.value = localStorage.getItem('speak_gemini_api_key') || '';
     if (geminiModelSelect) {
-        geminiModelSelect.value = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash-exp';
+        geminiModelSelect.value = localStorage.getItem('speak_gemini_model') || 'gemini-live-2.5-flash-native-audio';
     }
     customWsUrlInput.value = localStorage.getItem('speak_custom_backend_ws') || '';
     if (testApiResult) testApiResult.textContent = '';
@@ -199,7 +200,7 @@ closeBackendSettingsModalBtn.addEventListener('click', () => backendSettingsModa
 saveBackendWsBtn.addEventListener('click', () => {
     const keyVal = geminiApiKeyInput.value.trim();
     const wsVal = customWsUrlInput.value.trim();
-    const modelVal = geminiModelSelect ? geminiModelSelect.value : 'gemini-2.0-flash-exp';
+    const modelVal = geminiModelSelect ? geminiModelSelect.value : 'gemini-live-2.5-flash-native-audio';
 
     if (keyVal) {
         localStorage.setItem('speak_gemini_api_key', keyVal);
@@ -224,14 +225,14 @@ resetBackendWsBtn.addEventListener('click', () => {
     localStorage.removeItem('speak_gemini_model');
     localStorage.removeItem('speak_custom_backend_ws');
     geminiApiKeyInput.value = '';
-    if (geminiModelSelect) geminiModelSelect.value = 'gemini-2.0-flash-exp';
+    if (geminiModelSelect) geminiModelSelect.value = 'gemini-live-2.5-flash-native-audio';
     customWsUrlInput.value = '';
     if (testApiResult) testApiResult.textContent = '';
     addLog('已重置 API Key 與後端設定', 'info');
     backendSettingsModal.classList.add('hidden');
 });
 
-// ----------------- Vocabulary Bank (LocalStorage) -----------------
+// ----------------- Vocabulary Bank with SM-2 Spaced Repetition -----------------
 
 function getSavedVocab() {
     try {
@@ -241,24 +242,71 @@ function getSavedVocab() {
     }
 }
 
+function saveSavedVocab(list) {
+    localStorage.setItem('speak_saved_vocab', JSON.stringify(list));
+}
+
+function getMasteryLabel(level) {
+    switch (level) {
+        case 'mastered': return '<span class="mastery-badge mastery-mastered">✅ 已精通</span>';
+        case 'reviewing': return '<span class="mastery-badge mastery-reviewing">🔄 複習中</span>';
+        default: return '<span class="mastery-badge mastery-learning">📖 學習中</span>';
+    }
+}
+
+function getTimeUntilReview(nextReviewAt) {
+    if (!nextReviewAt) return '';
+    const diff = nextReviewAt - Date.now();
+    if (diff <= 0) return '<span class="review-due-badge">⏰ 可複習</span>';
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `<span style="font-size:0.7rem; color:var(--text-muted);">⏳ ${days} 天後複習</span>`;
+    return `<span style="font-size:0.7rem; color:var(--text-muted);">⏳ ${hours} 小時後</span>`;
+}
+
+function getReviewDueCards() {
+    const list = getSavedVocab();
+    return list.filter((item, idx) => {
+        if (item.masteryLevel === 'mastered') return false;
+        if (!item.nextReviewAt) return true;
+        return item.nextReviewAt <= Date.now();
+    }).map((item, _, arr) => {
+        const list = getSavedVocab();
+        return { ...item, _index: list.indexOf(item) };
+    });
+}
+
 function updateVocabUI() {
     const list = getSavedVocab();
     vocabCount.textContent = list.length;
+    const startReviewBtn = document.getElementById('startReviewBtn');
 
     if (list.length === 0) {
         vocabList.innerHTML = `<div class="empty-state">尚無收藏卡片。可以在對話中點擊「⭐ 收藏此卡片」將重點句加入收藏庫。</div>`;
+        if (startReviewBtn) { startReviewBtn.disabled = true; startReviewBtn.textContent = '📝 無卡片'; }
         return;
+    }
+
+    const dueCount = getReviewDueCards().length;
+    if (startReviewBtn) {
+        startReviewBtn.disabled = dueCount === 0;
+        startReviewBtn.textContent = dueCount > 0 ? `📝 複習 (${dueCount})` : '📝 尚無到期';
     }
 
     vocabList.innerHTML = list.map((item, idx) => `
         <div class="correction-card">
             <div class="correction-header">
-                <span>📌 #${idx + 1} (${item.date})</span>
+                <span>📌 #${idx + 1} (${item.date}) ${getMasteryLabel(item.masteryLevel || 'learning')}</span>
                 <button class="btn-text" onclick="deleteVocab(${idx})">🗑️ 刪除</button>
             </div>
             <div class="correction-body">
                 <div class="correction-row original"><span class="label">原句：</span>${item.original}</div>
                 <div class="correction-row corrected"><span class="label">建議：</span>${item.corrected}</div>
+                ${item.explanation ? `<div class="correction-row explanation"><span class="label">💡 說明：</span>${item.explanation}</div>` : ''}
+            </div>
+            <div class="vocab-card-meta">
+                ${getTimeUntilReview(item.nextReviewAt)}
+                ${item.intervalDays ? `<span>間隔: ${item.intervalDays}天</span>` : ''}
             </div>
         </div>
     `).join('');
@@ -267,7 +315,7 @@ function updateVocabUI() {
 window.deleteVocab = function(index) {
     const list = getSavedVocab();
     list.splice(index, 1);
-    localStorage.setItem('speak_saved_vocab', JSON.stringify(list));
+    saveSavedVocab(list);
     updateVocabUI();
 };
 
@@ -276,13 +324,19 @@ saveCorrectionBtn.addEventListener('click', () => {
     const corr = correctedTextEl.textContent;
     if (orig === '--' || corr === '--') return;
 
+    const explanation = explanationTextEl ? explanationTextEl.textContent : '';
     const list = getSavedVocab();
     list.unshift({
         original: orig,
         corrected: corr,
-        date: new Date().toLocaleDateString('zh-TW')
+        explanation: explanation !== '--' ? explanation : '',
+        date: new Date().toLocaleDateString('zh-TW'),
+        masteryLevel: 'learning',
+        intervalDays: 1,
+        nextReviewAt: Date.now() + 86400000,
+        easeFactor: 2.5
     });
-    localStorage.setItem('speak_saved_vocab', JSON.stringify(list));
+    saveSavedVocab(list);
     updateVocabUI();
     saveCorrectionBtn.textContent = '✅ 已加入收藏！';
     setTimeout(() => { saveCorrectionBtn.textContent = '⭐ 收藏此卡片'; }, 2000);
@@ -294,6 +348,86 @@ openVocabBtn.addEventListener('click', () => {
 });
 closeVocabModalBtn.addEventListener('click', () => vocabModal.classList.add('hidden'));
 closeSummaryModalBtn.addEventListener('click', () => summaryModal.classList.add('hidden'));
+
+// ----------------- SM-2 Review Quiz System -----------------
+
+let reviewQueue = [];
+let reviewIndex = 0;
+
+function startReviewQuiz() {
+    const dueCards = getReviewDueCards();
+    if (dueCards.length === 0) {
+        addLog('目前沒有到期的複習卡片！', 'info');
+        return;
+    }
+    reviewQueue = dueCards;
+    reviewIndex = 0;
+    vocabModal.classList.add('hidden');
+    document.getElementById('reviewModal').classList.remove('hidden');
+    showReviewCard();
+}
+
+function showReviewCard() {
+    if (reviewIndex >= reviewQueue.length) {
+        document.getElementById('reviewPrompt').textContent = '🎉 全部複習完畢！';
+        document.getElementById('reviewHint').textContent = `你今天複習了 ${reviewQueue.length} 張卡片`;
+        document.getElementById('reviewAnswer').classList.remove('visible');
+        document.getElementById('reviewActions').innerHTML = '<button class="review-btn show-answer" onclick="document.getElementById(\\'reviewModal\\').classList.add(\\'hidden\\')">關閉</button>';
+        document.getElementById('reviewProgressFill').style.width = '100%';
+        document.getElementById('reviewProgressText').textContent = `${reviewQueue.length} / ${reviewQueue.length}`;
+        updateStreak();
+        return;
+    }
+
+    const card = reviewQueue[reviewIndex];
+    document.getElementById('reviewPrompt').textContent = card.explanation || card.corrected;
+    document.getElementById('reviewHint').textContent = `🎯 請回想正確的英文說法（原句是錯的）`;
+    document.getElementById('reviewAnswer').textContent = `✅ ${card.corrected}`;
+    document.getElementById('reviewAnswer').classList.remove('visible');
+    document.getElementById('reviewActions').innerHTML = '<button class="review-btn show-answer" id="showAnswerBtn" onclick="revealAnswer()">👀 顯示答案</button>';
+    document.getElementById('reviewProgressText').textContent = `${reviewIndex + 1} / ${reviewQueue.length}`;
+    document.getElementById('reviewProgressFill').style.width = `${((reviewIndex) / reviewQueue.length) * 100}%`;
+}
+
+window.revealAnswer = function() {
+    document.getElementById('reviewAnswer').classList.add('visible');
+    document.getElementById('reviewActions').innerHTML = `
+        <button class="review-btn remembered" onclick="processReviewAnswer(true)">✅ 記得</button>
+        <button class="review-btn forgot" onclick="processReviewAnswer(false)">❌ 忘記</button>
+    `;
+};
+
+window.processReviewAnswer = function(remembered) {
+    const card = reviewQueue[reviewIndex];
+    const list = getSavedVocab();
+    const realIndex = card._index;
+    if (realIndex === undefined || !list[realIndex]) { reviewIndex++; showReviewCard(); return; }
+
+    if (remembered) {
+        list[realIndex].easeFactor = Math.max(1.3, (list[realIndex].easeFactor || 2.5) + 0.1);
+        list[realIndex].intervalDays = Math.ceil((list[realIndex].intervalDays || 1) * list[realIndex].easeFactor);
+        if (list[realIndex].intervalDays >= 21) {
+            list[realIndex].masteryLevel = 'mastered';
+        } else if (list[realIndex].intervalDays >= 3) {
+            list[realIndex].masteryLevel = 'reviewing';
+        }
+    } else {
+        list[realIndex].easeFactor = Math.max(1.3, (list[realIndex].easeFactor || 2.5) - 0.2);
+        list[realIndex].intervalDays = 1;
+        list[realIndex].masteryLevel = 'learning';
+    }
+    list[realIndex].nextReviewAt = Date.now() + (list[realIndex].intervalDays * 86400000);
+    saveSavedVocab(list);
+
+    reviewIndex++;
+    showReviewCard();
+};
+
+const startReviewBtn = document.getElementById('startReviewBtn');
+if (startReviewBtn) startReviewBtn.addEventListener('click', startReviewQuiz);
+
+const closeReviewModalBtn = document.getElementById('closeReviewModalBtn');
+if (closeReviewModalBtn) closeReviewModalBtn.addEventListener('click', () => document.getElementById('reviewModal').classList.add('hidden'));
 
 // ----------------- Log & Subtitle Utility -----------------
 
@@ -319,11 +453,12 @@ function updateCaption(text, append = false) {
 }
 
 function parseGrammarCorrection(text) {
-    const correctionRegex = /(?:Correction|Instead of|You should say|Did you mean):?\s*["']?([^"'\n\.]+)["']?\s*->?\s*["']?([^"'\n\.]+)["']?/i;
+    const correctionRegex = /\[\[CORRECTION\|([^|]+)\|([^|]+)\|([^\]]+)\]\]/;
     const match = text.match(correctionRegex);
     if (match) {
-        originalTextEl.textContent = match[1];
-        correctedTextEl.textContent = match[2];
+        originalTextEl.textContent = match[1].trim();
+        correctedTextEl.textContent = match[2].trim();
+        if (explanationTextEl) explanationTextEl.textContent = match[3].trim();
         correctionCard.classList.remove('hidden');
         correctionsCount++;
     }
@@ -619,12 +754,17 @@ function connectWebSocket() {
         const connector = baseUrl.includes('?') ? '&' : '?';
         wsUrl = `${baseUrl}${connector}voice=${encodeURIComponent(selectedVoice)}&scenario=${encodeURIComponent(currentScenario)}`;
     }
-    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash-exp';
+    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-live-2.5-flash-native-audio';
     let formattedModel = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
 
-    if (isDirectGemini && !formattedModel.includes('gemini-2.0-flash')) {
-        addLog(`⚠️ Live API 僅支援 Gemini 2.0 Flash，已強制使用 models/gemini-2.0-flash-exp`, 'error');
-        formattedModel = 'models/gemini-2.0-flash-exp';
+    // Live API (BidiGenerateContent) 僅支援特定即時語音模型
+    const LIVE_SUPPORTED_MODELS = ['gemini-live-2.5-flash-native-audio', 'gemini-2.0-flash-live-001'];
+    if (isDirectGemini) {
+        const isLiveModel = LIVE_SUPPORTED_MODELS.some(m => formattedModel.includes(m));
+        if (!isLiveModel) {
+            addLog(`⚠️ Live API 不支援 ${formattedModel}，已自動切換為 gemini-live-2.5-flash-native-audio`, 'error');
+            formattedModel = 'models/gemini-live-2.5-flash-native-audio';
+        }
     }
 
     addLog(isDirectGemini ? `連線中：直連 Google Gemini Live API (${formattedModel})` : `連線至後端 WebSocket: ${wsUrl}`, 'info');
@@ -692,6 +832,7 @@ function connectWebSocket() {
             if (response.serverContent?.turnComplete) {
                 isFirstChunkOfTurn = true;
                 turnsCount++;
+                if (turnsCount === 1) updateStreak();
             }
 
             const parts = response.serverContent?.modelTurn?.parts;
@@ -824,4 +965,53 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+// ----------------- Daily Streak System 🔥 -----------------
+
+function getStreak() {
+    try {
+        return JSON.parse(localStorage.getItem('speak_streak')) || { count: 0, lastDate: '' };
+    } catch {
+        return { count: 0, lastDate: '' };
+    }
+}
+
+function getTodayStr() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getYesterdayStr() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+}
+
+function updateStreak() {
+    const streak = getStreak();
+    const today = getTodayStr();
+    
+    if (streak.lastDate === today) return streak.count;
+    
+    if (streak.lastDate === getYesterdayStr()) {
+        streak.count += 1;
+    } else {
+        streak.count = 1;
+    }
+    streak.lastDate = today;
+    localStorage.setItem('speak_streak', JSON.stringify(streak));
+    renderStreakBadge();
+    return streak.count;
+}
+
+function renderStreakBadge() {
+    const streak = getStreak();
+    const el = document.getElementById('streakCount');
+    if (el) el.textContent = streak.count;
+    
+    const badge = document.getElementById('streakBadge');
+    if (badge) {
+        badge.style.display = streak.count > 0 ? 'flex' : 'none';
+    }
+}
+
+renderStreakBadge();
 updateVocabUI();

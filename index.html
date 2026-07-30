@@ -42,6 +42,11 @@
             </div>
             
             <div class="header-right">
+                <!-- Streak Flame Badge -->
+                <div class="streak-badge" id="streakBadge" title="每日口說連勝紀錄">
+                    🔥 <span class="streak-count" id="streakCount">0</span>
+                </div>
+
                 <!-- Settings Button (API Key & Model & Backend WS) -->
                 <button id="openBackendSettingsBtn" class="icon-btn" title="API Key 與模型設定">
                     ⚙️
@@ -125,6 +130,10 @@
                         <span class="label">建議修正：</span>
                         <span id="correctedText">--</span>
                     </div>
+                    <div class="correction-row explanation">
+                        <span class="label">💡 說明：</span>
+                        <span id="explanationText">--</span>
+                    </div>
                 </div>
             </div>
 
@@ -167,7 +176,10 @@
         <div class="modal-card">
             <div class="modal-header">
                 <h3>⭐ 我的單字與地道片語收藏庫</h3>
-                <button class="close-btn" id="closeVocabModalBtn">&times;</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="start-review-btn" id="startReviewBtn" title="開始間隔複習">📝 開始複習</button>
+                    <button class="close-btn" id="closeVocabModalBtn">&times;</button>
+                </div>
             </div>
             <div class="modal-body" id="vocabList">
                 <div class="empty-state">尚無收藏卡片。可以在對話中點擊「⭐ 收藏此卡片」將重點句加入收藏庫。</div>
@@ -226,11 +238,8 @@
                         <div style="margin-bottom:8px;">
                             <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:4px;">🤖 選擇 Gemini API 模型：</label>
                             <select id="geminiModelSelect" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(22,28,45,0.9); color:#fff; font-family:inherit; font-size:0.85rem; outline:none; cursor:pointer;">
-                                <option value="gemini-2.0-flash-exp">✨ gemini-2.0-flash-exp (推薦：Gemini Live API 雙向即時語音專用)</option>
-                                <option value="gemini-2.5-flash">⚡ gemini-2.5-flash</option>
-                                <option value="gemini-2-flash">⚡ gemini-2-flash</option>
-                                <option value="gemini-3.5-flash">🚀 gemini-3.5-flash</option>
-                                <option value="gemini-3.1-pro">🧠 gemini-3.1-pro</option>
+                                <option value="gemini-live-2.5-flash-native-audio">✨ gemini-live-2.5-flash-native-audio (推薦：Live API 即時語音專用)</option>
+                                <option value="gemini-2.0-flash-live-001">⚡ gemini-2.0-flash-live-001</option>
                             </select>
                         </div>
 
@@ -256,6 +265,32 @@
                 <div style="display:flex; gap:10px; margin-top:14px;">
                     <button id="saveBackendWsBtn" class="btn btn-primary" style="padding:10px;">儲存設定</button>
                     <button id="resetBackendWsBtn" class="btn-text" style="color:var(--danger);">清除與重置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Review Quiz (SM-2 Spaced Repetition) -->
+    <div class="modal-overlay hidden" id="reviewModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>📝 間隔複習 — Smart Review</h3>
+                <button class="close-btn" id="closeReviewModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="review-card" id="reviewCardArea">
+                    <div class="review-prompt" id="reviewPrompt">載入中...</div>
+                    <div class="review-hint" id="reviewHint"></div>
+                    <div class="review-answer" id="reviewAnswer"></div>
+                    <div class="review-actions" id="reviewActions">
+                        <button class="review-btn show-answer" id="showAnswerBtn">👀 顯示答案</button>
+                    </div>
+                </div>
+                <div class="review-progress">
+                    <span id="reviewProgressText">0 / 0</span>
+                    <div class="review-progress-bar">
+                        <div class="review-progress-fill" id="reviewProgressFill" style="width:0%"></div>
+                    </div>
                 </div>
             </div>
         </div>

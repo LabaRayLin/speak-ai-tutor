@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-live")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-live-2.5-flash-native-audio")
 
-GEMINI_WS_URL = f"wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key={GEMINI_API_KEY}"
+GEMINI_WS_URL = f"wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key={GEMINI_API_KEY}"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,30 +32,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+CORRECTION_PROMPT = r"\n\n【糾正格式約束】如果學生的句子有文法、用詞或不道地的錯誤，請在你的語音回覆結尾，額外用以下特殊語法輸出糾正卡片：\n[[CORRECTION|學生的原句|道地的正確說法|繁體中文修改建議說明]]\n例如：[[CORRECTION|I go to school yesterday|I went to school yesterday|應使用過去式 went，因為 yesterday 表示過去的時間]]\n如果學生沒有錯誤，就不需要加入 [[CORRECTION]] 標記。"
+
 # 情境角色扮演 System Prompts 定義 (Speak App 核心情境)
 SCENARIO_PROMPTS = {
     "freetalk": (
         "你是一位專業、有耐心的美國籍英文家教 Alex。請與學生進行自然的日常自由對話。"
         "回覆必須簡短自然。如果學生的句子有文法或用詞錯誤，請先指出並簡單糾正，再接續對話。"
+        + CORRECTION_PROMPT
     ),
     "starbucks": (
         "你是一位在星巴克工作的美國咖啡師 (Barista)。學生是一位前來點餐的顧客。"
         "請用熱情友善的英文引導學生點餐（詢問杯型、甜度冰塊、奶類選擇及姓名）。"
         "若學生的句子有文法錯誤，請先溫和糾正，再回覆顧客。"
+        + CORRECTION_PROMPT
     ),
     "interview": (
         "你是一位美國跨國科技公司的外商主考官 (Job Interviewer)。學生是一位前來面試的求職者。"
         "請用專業專業的態度提問面試問題（自我介紹、過去專案經驗、優缺點與離職原因）。"
         "若學生有文法錯誤或不地道表達，請糾正後再繼續下一個面試問題。"
+        + CORRECTION_PROMPT
     ),
     "airport": (
         "你是一位在美國甘迺迪國際機場 (JFK Airport) 的海關與登機櫃檯人員。"
         "請用正式標準的英文詢問學生的護照、登機證、來美目的與住宿地點。"
         "若學生表達有錯誤，請予以溫和糾正並繼續核對流程。"
+        + CORRECTION_PROMPT
     ),
     "business": (
         "你是一位美國商業合作夥伴。學生正與你進行一場商業合作會議 (Business Negotiation)。"
         "請用專業職場英文進行討論與談判。若學生用詞不符合商業職場慣例，請給予修正建議。"
+        + CORRECTION_PROMPT
     )
 }
 
