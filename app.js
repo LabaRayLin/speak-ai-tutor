@@ -339,3 +339,43 @@ function speakAIResponse(text) {
 
     synthesis.speak(currentUtterance);
 }
+
+testApiKeyBtn.addEventListener('click', async () => {
+    const key = geminiApiKeyInput.value.trim();
+    const model = geminiModelSelect.value;
+    if (!key) {
+        testApiResult.textContent = '❌ 請先輸入 API Key';
+        testApiResult.style.color = 'var(--danger)';
+        return;
+    }
+    
+    testApiResult.textContent = '⏳ 測試連線中...';
+    testApiResult.style.color = 'var(--text-muted)';
+    testApiKeyBtn.disabled = true;
+
+    try {
+        let formattedModel = model.startsWith('models/') ? model : "models/" + model;
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/" + formattedModel + ":generateContent?key=" + key, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: "Hello" }] }],
+                generationConfig: { maxOutputTokens: 10 }
+            })
+        });
+
+        if (response.ok) {
+            testApiResult.textContent = '✅ API Key 測試成功！請點擊下方儲存。';
+            testApiResult.style.color = 'var(--accent)';
+        } else {
+            const errBody = await response.text();
+            testApiResult.textContent = '❌ 測試失敗: ' + response.status;
+            testApiResult.style.color = 'var(--danger)';
+        }
+    } catch (err) {
+        testApiResult.textContent = '❌ 網路錯誤或跨域阻擋';
+        testApiResult.style.color = 'var(--danger)';
+    } finally {
+        testApiKeyBtn.disabled = false;
+    }
+});
