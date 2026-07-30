@@ -219,7 +219,7 @@ function handleRecognitionResult(event) {
 // Ensure function is exposed for external test scripts if needed
 window.sendToGeminiREST = async function(userText) {
     const apiKey = localStorage.getItem('speak_gemini_api_key');
-    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.5-flash';
+    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash';
     let formattedModel = selectedModel.startsWith('models/') ? selectedModel : "models/" + selectedModel;
     
     updateCaption("AI 思考中...");
@@ -379,3 +379,4 @@ testApiKeyBtn.addEventListener('click', async () => {
         testApiKeyBtn.disabled = false;
     }
 });
+
