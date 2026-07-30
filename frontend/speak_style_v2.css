@@ -201,7 +201,7 @@ body {
 }
 
 .voice-select option {
-    background: #161c2d;
+    background: #ffffff;
     color: var(--text-main);
 }
 
@@ -391,7 +391,7 @@ body {
     padding: 10px 14px;
     border-radius: 16px;
     font-size: 0.88rem;
-    color: #e0e7ff;
+    color: #1e293b;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -431,8 +431,8 @@ body {
     font-size: 0.85rem;
 }
 
-.correction-row.original { color: #f87171; text-decoration: line-through; }
-.correction-row.corrected { color: #34d399; font-weight: 500; }
+.correction-row.original { color: #ef4444; text-decoration: line-through; }
+.correction-row.corrected { color: #22c55e; font-weight: 500; }
 
 .wave-visualizer {
     display: flex;
@@ -571,7 +571,7 @@ body {
 .modal-overlay.hidden { display: none; }
 
 .modal-card {
-    background: #161c2d;
+    background: #ffffff;
     border: 1px solid var(--card-border);
     border-radius: 20px;
     width: 100%;
@@ -624,7 +624,7 @@ body {
     padding: 14px;
 }
 
-.report-section h4 { font-size: 0.9rem; margin-bottom: 6px; color: #e0e7ff; }
+.report-section h4 { font-size: 0.9rem; margin-bottom: 6px; color: #1e293b; }
 .report-section p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
 
 .empty-state { text-align: center; color: var(--text-muted); padding: 20px; font-size: 0.88rem; }
@@ -664,7 +664,7 @@ body {
 
 .mastery-reviewing {
     background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
+    color: #3b82f6;
     border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
@@ -676,7 +676,7 @@ body {
 
 .review-due-badge {
     font-size: 0.7rem;
-    color: #f87171;
+    color: #ef4444;
     margin-left: 6px;
 }
 
@@ -775,7 +775,7 @@ body {
 
 .review-btn.forgot {
     background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
+    color: #ef4444;
     border: 1px solid rgba(239, 68, 68, 0.3);
     flex: 1;
 }
@@ -840,5 +840,6 @@ body {
     color: var(--text-muted);
     margin-top: 6px;
 }
+
 
 
