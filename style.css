@@ -69,6 +69,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    position: relative;
+    z-index: 1;
 }
 
 .app-header {
@@ -78,6 +80,8 @@ body {
     padding: 8px 4px;
     margin-bottom: 4px;
     width: 100%;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .logo-area {
@@ -109,6 +113,8 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .icon-btn {
