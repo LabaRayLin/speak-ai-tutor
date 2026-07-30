@@ -1,13 +1,13 @@
-:root {
-    --bg-dark: #080b12;
-    --card-bg: rgba(15, 23, 42, 0.75);
-    --card-border: rgba(255, 255, 255, 0.06);
-    --primary: #00E5FF;
-    --primary-hover: #00C4D9;
+﻿:root {
+    --bg-dark: #f4f7f9;
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --card-border: rgba(0, 0, 0, 0.1);
+    --primary: #007AFF;
+    --primary-hover: #0056b3;
     --accent: #22c55e;
     --danger: #ef4444;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
     --font: 'Outfit', sans-serif;
 }
 
@@ -50,7 +50,7 @@ body {
 .glow-1 {
     width: 400px;
     height: 400px;
-    background: #00E5FF;
+    background: #007AFF;
     top: -100px;
     left: -100px;
 }
@@ -95,7 +95,7 @@ body {
 
 .logo-icon {
     font-size: 2rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.05);
     padding: 8px;
     border-radius: 12px;
     border: 1px solid var(--card-border);
@@ -124,8 +124,45 @@ body {
     z-index: 9999; /* ENSURE CLICKABLE */
 }
 
+.status-badge {
+    background: rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+    transition: all 0.3s ease;
+}
+
+.status-badge.status-connected {
+    border-color: rgba(0, 229, 255, 0.3);
+    background: rgba(0, 229, 255, 0.05);
+}
+
+.status-badge.status-connected .status-dot {
+    background-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary);
+    animation: pulse-dot 1.5s infinite alternate;
+}
+
+@keyframes pulse-dot {
+    0% { opacity: 0.6; box-shadow: 0 0 4px var(--primary); }
+    100% { opacity: 1; box-shadow: 0 0 12px var(--primary); }
+}
+
 .icon-btn {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.08);
     border: 1px solid var(--card-border);
     color: var(--text-main);
     padding: 8px 12px;
@@ -139,12 +176,12 @@ body {
 }
 
 .icon-btn:hover {
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.12);
 }
 
 .vocab-badge {
     background: var(--primary);
-    color: #fff;
+    color: var(--text-main);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 2px 6px;
@@ -152,7 +189,7 @@ body {
 }
 
 .voice-select {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.06);
     color: var(--text-main);
     border: 1px solid var(--card-border);
     padding: 6px 10px;
@@ -165,40 +202,7 @@ body {
 
 .voice-select option {
     background: #161c2d;
-    color: #fff;
-}
-
-.status-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--card-border);
-    padding: 6px 12px;
-    border-radius: 30px;
-    font-size: 0.8rem;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--text-muted);
-}
-
-.status-badge.connected .status-dot {
-    background-color: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
-}
-
-.status-badge.connecting .status-dot {
-    background-color: #f59e0b;
-    animation: blink 1s infinite alternate;
-}
-
-.status-badge.speaking .status-dot {
-    background-color: #3b82f6;
-    box-shadow: 0 0 12px #3b82f6;
+    color: var(--text-main);
 }
 
 @keyframes blink {
@@ -230,8 +234,29 @@ body {
     display: none;
 }
 
+.log-content {
+    background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(0,0,0,0.05);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    max-height: 150px;
+    overflow-y: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+}
+
+.log-content.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
 .chip {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.05);
     border: 1px solid var(--card-border);
     color: var(--text-muted);
     padding: 8px 14px;
@@ -245,7 +270,7 @@ body {
 .chip.active, .chip:hover {
     background: rgba(59, 130, 246, 0.2);
     border-color: var(--primary);
-    color: #fff;
+    color: var(--text-main);
     box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
 }
 
@@ -259,7 +284,7 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     position: relative;
 }
 
@@ -279,7 +304,7 @@ body {
 }
 
 .speed-btn {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.05);
     border: 1px solid var(--card-border);
     color: var(--text-muted);
     padding: 3px 8px;
@@ -290,7 +315,7 @@ body {
 
 .speed-btn.active {
     background: var(--primary);
-    color: #fff;
+    color: var(--text-main);
     border-color: var(--primary);
 }
 
@@ -307,7 +332,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 3px solid rgba(255, 255, 255, 0.15);
+    border: 3px solid rgba(0, 0, 0, 0.15);
     position: relative;
     z-index: 2;
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
@@ -420,7 +445,7 @@ body {
 .wave-visualizer .bar {
     width: 4px;
     height: 8px;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(0, 0, 0, 0.15);
     border-radius: 4px;
     transition: height 0.15s ease, background-color 0.3s ease;
 }
@@ -461,7 +486,7 @@ body {
 
 .btn-primary {
     background: linear-gradient(135deg, #00E5FF, #007BFF);
-    color: #fff;
+    color: var(--text-main);
     box-shadow: 0 8px 20px rgba(0, 229, 255, 0.35);
 }
 
@@ -472,7 +497,7 @@ body {
 
 .btn-danger {
     background: linear-gradient(135deg, var(--danger), #dc2626);
-    color: #fff;
+    color: var(--text-main);
     box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
 }
 
@@ -524,7 +549,7 @@ body {
 .log-item {
     padding: 6px 10px;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.6);
 }
 
 .log-item.info { border-left: 3px solid var(--primary); }
@@ -554,7 +579,7 @@ body {
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
@@ -583,7 +608,7 @@ body {
 }
 
 .stat-box {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.04);
     border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 12px;
@@ -737,7 +762,7 @@ body {
 
 .review-btn.show-answer {
     background: linear-gradient(135deg, #3b82f6, #06b6d4);
-    color: #fff;
+    color: var(--text-main);
     width: 100%;
 }
 
@@ -769,7 +794,7 @@ body {
 .review-progress-bar {
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.08);
     border-radius: 2px;
     margin-top: 6px;
     overflow: hidden;
@@ -784,7 +809,7 @@ body {
 
 .start-review-btn {
     background: linear-gradient(135deg, #3b82f6, #06b6d4);
-    color: #fff;
+    color: var(--text-main);
     border: none;
     padding: 6px 14px;
     border-radius: 10px;
@@ -815,3 +840,5 @@ body {
     color: var(--text-muted);
     margin-top: 6px;
 }
+
+

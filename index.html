@@ -22,7 +22,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="speak_style_v2.css">
+    <link rel="stylesheet" href="speak_style_v2.css?v=18">
 </head>
 <body>
     <div class="background-decor">
@@ -229,7 +229,7 @@
                 <div style="display:flex; flex-direction:column; gap:12px;">
                     <!-- Option 1: Direct Gemini API Key with Test Button & Model Selector -->
                     <div style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:12px;">
-                        <h4 style="font-size:0.9rem; color:#e0e7ff; margin-bottom:6px;">🔑 方案一：直連 Gemini API Key (推薦 GitHub Pages)</h4>
+                        <h4 style="font-size:0.9rem; color:#1e293b; margin-bottom:6px;">🔑 方案一：直連 Gemini API Key (推薦 GitHub Pages)</h4>
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
                             填入您的 Gemini API Key 後，網頁即可直接與 Google Gemini Live API 進行無伺服器 WebSocket 雙向語音對話！
                         </p>
@@ -237,15 +237,17 @@
                         <!-- Model Selector -->
                         <div style="margin-bottom:8px;">
                             <label style="font-size:0.78rem; color:var(--text-muted); display:block; margin-bottom:4px;">🤖 選擇 Gemini API 模型：</label>
-                            <select id="geminiModelSelect" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(22,28,45,0.9); color:#fff; font-family:inherit; font-size:0.85rem; outline:none; cursor:pointer;">
-                                <option value="gemini-live-2.5-flash-native-audio">✨ gemini-live-2.5-flash-native-audio (推薦：Live API 即時語音專用)</option>
+                            <select id="geminiModelSelect" style="width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(255,255,255,0.9); color:#1e293b; font-family:inherit; font-size:0.85rem; outline:none; cursor:pointer;">
+                                <option value="gemini-2.5-flash">🚀 gemini-2.5-flash (推薦)</option>
+                                <option value="gemini-3.5-flash">🔥 gemini-3.5-flash</option>
+                                <option value="gemini-2.0-flash">✨ gemini-2.0-flash</option>
                                 <option value="gemini-2.0-flash-live-001">⚡ gemini-2.0-flash-live-001</option>
                             </select>
                         </div>
 
                         <div style="display:flex; gap:8px;">
-                            <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
-                            <button id="testApiKeyBtn" class="icon-btn" style="white-space:nowrap; background:rgba(99,102,241,0.3); border-color:var(--primary); color:#fff; font-weight:600;">
+                            <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.05); color:#1e293b; font-family:inherit; font-size:0.88rem; outline:none;" />
+                            <button id="testApiKeyBtn" class="icon-btn" style="white-space:nowrap; background:rgba(99,102,241,0.3); border-color:var(--primary); color:#1e293b; font-weight:600;">
                                 🧪 測試 Key
                             </button>
                         </div>
@@ -254,11 +256,11 @@
 
                     <!-- Option 2: Custom Backend WS URL -->
                     <div style="background:rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:12px; padding:12px;">
-                        <h4 style="font-size:0.9rem; color:#fff; margin-bottom:6px;">🌐 方案二：自訂 Python 中繼後端 URL (選填)</h4>
+                        <h4 style="font-size:0.9rem; color:#1e293b; margin-bottom:6px;">🌐 方案二：自訂 Python 中繼後端 URL (選填)</h4>
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
                             若您有部署 Python 後端 (如 Render / Railway)，可輸入 `wss://your-backend.onrender.com/ws`。
                         </p>
-                        <input type="text" id="customWsUrlInput" placeholder="wss://your-backend.onrender.com/ws" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.3); color:#fff; font-family:inherit; font-size:0.88rem; outline:none;" />
+                        <input type="text" id="customWsUrlInput" placeholder="wss://your-backend.onrender.com/ws" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--card-border); background:rgba(0,0,0,0.05); color:#1e293b; font-family:inherit; font-size:0.88rem; outline:none;" />
                     </div>
                 </div>
 
@@ -296,6 +298,7 @@
         </div>
     </div>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>
+
