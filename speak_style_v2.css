@@ -1,9 +1,9 @@
 :root {
-    --bg-dark: #0a0e17;
+    --bg-dark: #080b12;
     --card-bg: rgba(15, 23, 42, 0.75);
     --card-border: rgba(255, 255, 255, 0.06);
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
+    --primary: #00E5FF;
+    --primary-hover: #00C4D9;
     --accent: #22c55e;
     --danger: #ef4444;
     --text-main: #f1f5f9;
@@ -50,7 +50,7 @@ body {
 .glow-1 {
     width: 400px;
     height: 400px;
-    background: #3b82f6;
+    background: #00E5FF;
     top: -100px;
     left: -100px;
 }
@@ -90,6 +90,7 @@ body {
     align-items: center;
     gap: 12px;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .logo-icon {
@@ -118,7 +119,9 @@ body {
     flex-wrap: wrap;
     justify-content: flex-end;
     flex-shrink: 0;
-    min-width: 250px;
+    width: 100%; /* FORCE TO NEXT LINE */
+    position: relative;
+    z-index: 9999; /* ENSURE CLICKABLE */
 }
 
 .icon-btn {
@@ -457,14 +460,14 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    background: linear-gradient(135deg, #00E5FF, #007BFF);
     color: #fff;
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+    box-shadow: 0 8px 20px rgba(0, 229, 255, 0.35);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 25px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 12px 25px rgba(0, 229, 255, 0.5);
 }
 
 .btn-danger {

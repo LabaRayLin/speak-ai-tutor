@@ -372,7 +372,7 @@ function showReviewCard() {
         document.getElementById('reviewPrompt').textContent = '🎉 全部複習完畢！';
         document.getElementById('reviewHint').textContent = `你今天複習了 ${reviewQueue.length} 張卡片`;
         document.getElementById('reviewAnswer').classList.remove('visible');
-        document.getElementById('reviewActions').innerHTML = '<button class="review-btn show-answer" onclick="document.getElementById(\\'reviewModal\\').classList.add(\\'hidden\\')">關閉</button>';
+        document.getElementById('reviewActions').innerHTML = `<button class="review-btn show-answer" onclick="document.getElementById('reviewModal').classList.add('hidden')">關閉</button>`;
         document.getElementById('reviewProgressFill').style.width = '100%';
         document.getElementById('reviewProgressText').textContent = `${reviewQueue.length} / ${reviewQueue.length}`;
         updateStreak();
