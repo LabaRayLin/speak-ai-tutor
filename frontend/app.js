@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedKey) geminiApiKeyInput.value = savedKey;
     
     const savedModel = localStorage.getItem('speak_gemini_model');
-    if (savedModel) geminiModelSelect.value = savedModel;
+    if (savedModel) { geminiModelSelect.value = savedModel; if (!geminiModelSelect.value) geminiModelSelect.value = 'gemini-3.5-flash'; }
 
     // Initialize Web Speech API
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
@@ -219,7 +219,7 @@ function handleRecognitionResult(event) {
 // Ensure function is exposed for external test scripts if needed
 window.sendToGeminiREST = async function(userText) {
     const apiKey = localStorage.getItem('speak_gemini_api_key');
-    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-2.0-flash';
+    const selectedModel = localStorage.getItem('speak_gemini_model') || 'gemini-3.5-flash';
     let formattedModel = selectedModel.startsWith('models/') ? selectedModel : "models/" + selectedModel;
     
     updateCaption("AI 思考中...");
@@ -343,6 +343,7 @@ function speakAIResponse(text) {
 testApiKeyBtn.addEventListener('click', async () => {
     const key = geminiApiKeyInput.value.trim();
     const model = geminiModelSelect.value;
+    if (!model) { testApiResult.textContent = '❌ 請選擇有效的模型'; return; }
     if (!key) {
         testApiResult.textContent = '❌ 請先輸入 API Key';
         testApiResult.style.color = 'var(--danger)';
@@ -379,4 +380,6 @@ testApiKeyBtn.addEventListener('click', async () => {
         testApiKeyBtn.disabled = false;
     }
 });
+
+
 
