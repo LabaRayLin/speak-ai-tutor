@@ -62,12 +62,26 @@ document.addEventListener('DOMContentLoaded', () => {
         
         recognition.onresult = handleRecognitionResult;
         recognition.onerror = (e) => {
+            if (sessionActive && (e.error === 'no-speech' || e.error === 'aborted')) {
+                // Non-fatal errors during active session
+                // Keep isListening = true so onend will auto-restart
+                return;
+            }
             addLog("語音辨識錯誤: " + e.error, 'error');
             stopListening();
         };
         recognition.onend = () => {
             if (isListening) {
+                // Continuous listening mode - restart recognition
                 try { recognition.start(); } catch(e){}
+            } else if (sessionActive && !synthesis.speaking) {
+                // Session active but recognition stopped unexpectedly
+                // (e.g., audio-capture error) - auto-resume
+                setTimeout(() => {
+                    if (sessionActive && !isListening && !synthesis.speaking) {
+                        resumeListening();
+                    }
+                }, 500);
             }
         };
     } else {
@@ -322,14 +336,23 @@ window.sendToGeminiREST = async function(userText) {
     } catch (error) {
         addLog("Gemini API 請求失敗: " + error.message, 'error');
         updateCaption("連線失敗，請重試");
-        updateUIState('disconnected');
+        if (sessionActive) {
+            // Don't disconnect - resume listening so user can retry
+            resumeListening();
+        } else {
+            updateUIState('disconnected');
+        }
     }
 }
 
 function speakAIResponse(text) {
     if (!window.speechSynthesis) {
         addLog("您的瀏覽器不支援語音合成", 'error');
-        updateUIState('disconnected');
+        if (sessionActive) {
+            resumeListening();
+        } else {
+            updateUIState('disconnected');
+        }
         return;
     }
     
@@ -349,29 +372,45 @@ function speakAIResponse(text) {
     }
     if (chosenVoice) currentUtterance.voice = chosenVoice;
 
+    let speechEnded = false;
+    
+    function onSpeechDone() {
+        if (speechEnded) return;
+        speechEnded = true;
+        if (sessionActive) {
+            resumeListening();
+        } else {
+            updateUIState('disconnected');
+        }
+    }
+
     currentUtterance.onstart = () => {
         updateUIState('speaking');
         isListening = false;
     };
     
     currentUtterance.onend = () => {
-        if (sessionActive) {
-            // Automatically resume listening after AI finishes speaking
-            resumeListening();
-        } else {
-            updateUIState('disconnected');
-        }
+        onSpeechDone();
     };
     
     currentUtterance.onerror = (e) => {
-        if (sessionActive) {
-            resumeListening();
-        } else {
-            updateUIState('disconnected');
-        }
+        onSpeechDone();
     };
 
     synthesis.speak(currentUtterance);
+    
+    // Watchdog timer: on mobile Safari, onend sometimes never fires.
+    // Poll every 500ms to check if synthesis has stopped.
+    const watchdog = setInterval(() => {
+        if (!synthesis.speaking && !speechEnded) {
+            clearInterval(watchdog);
+            addLog("[系統] 語音播放完畢", 'info');
+            onSpeechDone();
+        }
+        if (speechEnded) {
+            clearInterval(watchdog);
+        }
+    }, 500);
 }
 
 testApiKeyBtn.addEventListener('click', async () => {
