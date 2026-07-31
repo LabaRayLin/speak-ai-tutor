@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // Speak AI Tutor - REST API & Web Speech API
 // ==========================================
 
@@ -28,6 +28,7 @@ const voiceSelect = document.getElementById('voiceSelect');
 // --- Global State ---
 let currentScenario = 'freetalk';
 let isListening = false;
+let sessionActive = false;
 let recognition = null;
 let synthesis = window.speechSynthesis;
 let currentUtterance = null;
@@ -106,8 +107,8 @@ clearLogBtn.addEventListener('click', () => {
 });
 
 toggleBtn.addEventListener('click', () => {
-    if (isListening) {
-        stopListening();
+    if (sessionActive) {
+        endSession();
     } else {
         const apiKey = localStorage.getItem('speak_gemini_api_key');
         if (!apiKey || apiKey.trim() === '') {
@@ -133,15 +134,16 @@ function updateUIState(state) {
         statusBadge.className = 'status-badge status-connected';
         statusText.textContent = '聆聽中';
         toggleBtn.className = 'btn btn-danger';
-        btnText.textContent = '停止聆聽 (送出)';
+        toggleBtn.disabled = false;
+        btnText.textContent = '結束對話';
         pulseRing.classList.add('active');
         waveVisualizer.classList.add('active');
     } else if (state === 'processing') {
         statusBadge.className = 'status-badge status-connected';
         statusText.textContent = 'AI 思考中';
         toggleBtn.className = 'btn btn-danger';
-        toggleBtn.disabled = true;
-        btnText.textContent = 'AI 思考中...';
+        toggleBtn.disabled = false;
+        btnText.textContent = '結束對話';
         pulseRing.classList.remove('active');
         waveVisualizer.classList.remove('active');
     } else if (state === 'speaking') {
@@ -149,7 +151,7 @@ function updateUIState(state) {
         statusText.textContent = 'AI 說話中';
         toggleBtn.className = 'btn btn-danger';
         toggleBtn.disabled = false;
-        btnText.textContent = 'AI 說話中... (點擊中斷)';
+        btnText.textContent = '結束對話';
         pulseRing.classList.add('active');
         waveVisualizer.classList.add('active');
     }
@@ -172,6 +174,7 @@ function startListening() {
     if (synthesis.speaking) synthesis.cancel();
     
     isListening = true;
+    sessionActive = true;
     updateUIState('listening');
     updateCaption("請開始說話...");
     
@@ -179,7 +182,21 @@ function startListening() {
         recognition.start();
         addLog("開始聆聽...", 'info');
     } catch(e) {
-        stopListening();
+        endSession();
+    }
+}
+
+function resumeListening() {
+    if (!recognition || !sessionActive) return;
+    
+    isListening = true;
+    updateUIState('listening');
+    updateCaption("請繼續說話...");
+    
+    try {
+        recognition.start();
+    } catch(e) {
+        // If already started, ignore
     }
 }
 
@@ -188,7 +205,14 @@ function stopListening() {
         try { recognition.stop(); } catch(e){}
     }
     isListening = false;
+}
+
+function endSession() {
+    stopListening();
+    if (synthesis.speaking) synthesis.cancel();
+    sessionActive = false;
     updateUIState('disconnected');
+    addLog("對話已結束", 'info');
 }
 
 function handleRecognitionResult(event) {
@@ -211,6 +235,7 @@ function handleRecognitionResult(event) {
         updateCaption(finalTranscript);
         addLog("使用者：" + finalTranscript, 'success');
         
+        // Pause recognition while processing, but keep session active
         stopListening();
         sendToGeminiREST(finalTranscript);
     }
@@ -330,11 +355,20 @@ function speakAIResponse(text) {
     };
     
     currentUtterance.onend = () => {
-        updateUIState('disconnected');
+        if (sessionActive) {
+            // Automatically resume listening after AI finishes speaking
+            resumeListening();
+        } else {
+            updateUIState('disconnected');
+        }
     };
     
     currentUtterance.onerror = (e) => {
-        updateUIState('disconnected');
+        if (sessionActive) {
+            resumeListening();
+        } else {
+            updateUIState('disconnected');
+        }
     };
 
     synthesis.speak(currentUtterance);
